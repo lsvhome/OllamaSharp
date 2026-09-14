@@ -34,7 +34,7 @@ public partial class ToolConsole
 	/// <param name="location">The location or city to get the weather for.</param>
 	/// <param name="unit">The unit to measure the temperature in.</param>
 	/// <returns>The weather description for the specified location.</returns>
-	[OllamaTool]
+	//[OllamaTool]
 	public static string GetWeather(string location, Unit unit) => $"It's cold at only 6° {unit} in {location}.";
 
 	/// <summary>
@@ -42,7 +42,7 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="location">The location to get the latitude and longitude for.</param>
 	/// <returns>A string containing the latitude and longitude.</returns>
-	[OllamaTool]
+	//[OllamaTool]
 	public async static Task<string> GetLatLonAsync(string location)
 	{
 		await Task.Delay(200).ConfigureAwait(false);
@@ -54,6 +54,6 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="city">The city to get the population info for.</param>
 	/// <returns>The population of the specified city.</returns>
-	[OllamaTool]
+	//[OllamaTool]
 	public static int GetPopulation(string city) => new Random().Next(1000, 10000000);
 }

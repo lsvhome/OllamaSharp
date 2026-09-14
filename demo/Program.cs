@@ -15,7 +15,8 @@ do
 {
 	AnsiConsole.MarkupLine($"Enter the Ollama [{OllamaConsole.AccentTextColor}]machine name[/] or [{OllamaConsole.AccentTextColor}]endpoint url[/]");
 
-	var url = OllamaConsole.ReadInput();
+	var url = string.Empty;
+	// url = OllamaConsole.ReadInput();
 
 	if (string.IsNullOrWhiteSpace(url))
 		url = "http://localhost:11434";

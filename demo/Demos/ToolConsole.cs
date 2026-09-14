@@ -12,14 +12,16 @@ namespace OllamaApiConsole.Demos;
 /// </summary>
 public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama)
 {
-	public static List<OllamaSharp.Models.Chat.Tool> Tools { get; } = [new GetWeatherTool(), new GetLatLonAsyncTool(), new GetPopulationTool()];
+	public static List<string> CommandHistory = new List<string>();
+
+	//public static List<OllamaSharp.Models.Chat.Tool> Tools1 { get; } = [new GetWeatherTool(), new GetLatLonAsyncTool(), new GetPopulationTool()];
 	/// <summary>
 	/// Gets the collection of available tools.
 	/// </summary>
-	public List<OllamaSharp.Models.Chat.Tool> Tools2 { get; } = Assembly.GetExecutingAssembly().GetTypes()
+	public List<OllamaSharp.Models.Chat.Tool> Tools { get; } = Assembly.GetExecutingAssembly().GetTypes()
 		.Where(t => typeof(OllamaSharp.Models.Chat.Tool).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
 		.Select(t => (OllamaSharp.Models.Chat.Tool)Activator.CreateInstance(t)!)
-		.Union(Tools)
+		//.Union(Tools1)
 		.Distinct()
 		.ToList();
 
@@ -84,9 +86,12 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 						break;
 					}
 
+					CommandHistory.Add(message);
+					
 					try
 					{
-						await foreach (var answerToken in chat.SendAsync(message, Tools))
+						var resp = chat.SendAsync(message, Tools);
+						await foreach (var answerToken in resp)
 							AnsiConsole.MarkupInterpolated($"[{AiTextColor}]{answerToken}[/]");
 					}
 					catch (OllamaException ex)
