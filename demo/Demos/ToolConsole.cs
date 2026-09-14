@@ -10,12 +10,18 @@ namespace OllamaApiConsole.Demos;
 /// <summary>
 /// Console that demonstrates tool usage with the Ollama API.
 /// </summary>
-public class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama)
+public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama)
 {
+	public static List<OllamaSharp.Models.Chat.Tool> Tools { get; } = [new GetWeatherTool(), new GetLatLonAsyncTool(), new GetPopulationTool()];
 	/// <summary>
 	/// Gets the collection of available tools.
 	/// </summary>
-	public List<object> Tools { get; } = [new GetWeatherTool(), new GetLatLonAsyncTool(), new GetPopulationTool()];
+	public List<OllamaSharp.Models.Chat.Tool> Tools2 { get; } = Assembly.GetExecutingAssembly().GetTypes()
+		.Where(t => typeof(OllamaSharp.Models.Chat.Tool).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+		.Select(t => (OllamaSharp.Models.Chat.Tool)Activator.CreateInstance(t)!)
+		.Union(Tools)
+		.Distinct()
+		.ToList();
 
 	/// <inheritdoc/>
 	public override async Task Run()
@@ -121,60 +127,13 @@ public class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama)
 		return builder.ToString();
 	}
 
-	private static void ListTools(IEnumerable<object> tools)
+	private static void ListTools(IEnumerable<OllamaSharp.Models.Chat.Tool> tools)
 	{
 		AnsiConsole.MarkupLine("\n[purple]Available tools:[/]");
 
 		foreach (var tool in tools)
 		{
-			if (tool is not OllamaSharp.Models.Chat.Tool chatTool)
-				break;
-
-			AnsiConsole.MarkupLineInterpolated($"{chatTool.Function?.Name ?? "Unknown"}\t\t[purple]{chatTool.Function?.Description}[/]");
+			AnsiConsole.MarkupLineInterpolated($"{tool.Function?.Name ?? "Unknown"}\t\t[purple]{tool.Function?.Description}[/]");
 		}
 	}
-
-	/// <summary>
-	/// Units of temperature measurement.
-	/// </summary>
-	public enum Unit
-	{
-		/// <summary>
-		/// Celsius temperature unit.
-		/// </summary>
-		Celsius,
-		/// <summary>
-		/// Fahrenheit temperature unit.
-		/// </summary>
-		Fahrenheit
-	}
-
-	/// <summary>
-	/// Gets the current weather for a given location.
-	/// </summary>
-	/// <param name="location">The location or city to get the weather for.</param>
-	/// <param name="unit">The unit to measure the temperature in.</param>
-	/// <returns>The weather description for the specified location.</returns>
-	[OllamaTool]
-	public static string GetWeather(string location, Unit unit) => $"It's cold at only 6° {unit} in {location}.";
-
-	/// <summary>
-	/// Gets the latitude and longitude for a given location.
-	/// </summary>
-	/// <param name="location">The location to get the latitude and longitude for.</param>
-	/// <returns>A string containing the latitude and longitude.</returns>
-	[OllamaTool]
-	public async static Task<string> GetLatLonAsync(string location)
-	{
-		await Task.Delay(200).ConfigureAwait(false);
-		return $"{new Random().Next(20, 50)}.4711, {new Random().Next(3, 15)}.0815";
-	}
-
-	/// <summary>
-	/// Gets the amount of people living in a given city.
-	/// </summary>
-	/// <param name="city">The city to get the population info for.</param>
-	/// <returns>The population of the specified city.</returns>
-	[OllamaTool]
-	public static int GetPopulation(string city) => new Random().Next(1000, 10000000);
 }
