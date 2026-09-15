@@ -80,7 +80,7 @@ public class OllamaApiClient : IOllamaApiClient, IChatClient, IEmbeddingGenerato
 	/// </summary>
 	/// <param name="config">The configuration for the Ollama API client.</param>
 	public OllamaApiClient(Configuration config)
-		: this(new HttpClient() { BaseAddress = config.Uri }, config.Model, config.JsonSerializerContext)
+		: this(new HttpClient() { BaseAddress = config.Uri, Timeout = Timeout.InfiniteTimeSpan }, config.Model, config.JsonSerializerContext)
 	{
 		_disposeHttpClient = true;
 	}

@@ -87,10 +87,44 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 					}
 
 					CommandHistory.Add(message);
-					
+
+					ConditionalCancellationTokenSource s = new ConditionalCancellationTokenSource(TimeSpan.FromMinutes(10));
+					s.OnTimeoutElapsed += (object sender, ConditionalCancellationTokenSourceEventArgs aargs) =>
+					{
+						AnsiConsole.MarkupLine("Timeout elapsed - interrupt ot still wait for response? [i/W]");
+						bool userAnswered = false;
+						do
+						{
+							using (var _timer = new Timer((state) => { Console.SetIn(new StringReader(Environment.NewLine)); }, new object(), (int)(aargs.ElapsedTimeout.Divide(2.0)).TotalMilliseconds, 0))
+							{
+
+								var answer = Console.ReadLine() ?? "";
+
+								if ("w" != answer.Trim().ToLower() || "" != answer.Trim().ToLower())
+								{
+									userAnswered = true;
+									aargs.NewTimeout = aargs.ElapsedTimeout;
+									AnsiConsole.MarkupLine($"Waiting prolonged for {aargs.NewTimeout}");
+								}
+								else if ("i" != answer.Trim().ToLower())
+								{
+									userAnswered = true;
+									AnsiConsole.MarkupLine($"Waiting interrupted");
+									//// do nothing - default behavior
+									//// aargs.NewTimeout == Zero and cancellation event happened
+								}
+								else
+								{
+									AnsiConsole.MarkupLine("User input didn't recognized - interrupt ot still wait for response? [i/W]");
+								}
+							}
+						}
+						while (!userAnswered);
+					};
+
 					try
 					{
-						var resp = chat.SendAsync(message, Tools);
+						var resp = chat.SendAsync(message, Tools, cancellationToken: s.Token);
 						await foreach (var answerToken in resp)
 							AnsiConsole.MarkupInterpolated($"[{AiTextColor}]{answerToken}[/]");
 					}
