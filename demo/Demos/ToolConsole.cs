@@ -88,17 +88,31 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 
 					CommandHistory.Add(message);
 
-					ConditionalCancellationTokenSource s = new ConditionalCancellationTokenSource(TimeSpan.FromMinutes(10));
+					if (string.IsNullOrWhiteSpace(message))
+					{
+						AnsiConsole.MarkupLine($"[{WarningTextColor}]Please enter a message or command.[/]");
+						continue;
+					}
+
+					//AnsiConsole.MarkupLine("Timeout happened - interrupt or still wait for response? [[i/W]]");
+
+					ConditionalCancellationTokenSource s = new ConditionalCancellationTokenSource(TimeSpan.FromSeconds(4));
 					s.OnTimeoutElapsed += (object sender, ConditionalCancellationTokenSourceEventArgs aargs) =>
 					{
-						AnsiConsole.MarkupLine("Timeout elapsed - interrupt ot still wait for response? [i\\W]");
 						bool userAnswered = false;
 						do
 						{
 							using (var _timer = new Timer((state) => { Console.SetIn(new StringReader(Environment.NewLine)); }, new object(), (int)(aargs.ElapsedTimeout.Divide(2.0)).TotalMilliseconds, 0))
 							{
-
+								AnsiConsole.MarkupLine("Timeout happened - interrupt or still wait for response? [[i/W]]");
 								var answer = Console.ReadLine() ?? "";
+
+								if(s.IsCancellationRequested)
+								{
+									userAnswered = true;
+									AnsiConsole.MarkupLine("Cancellation requested - exiting timeout handler.");
+									break;
+								}
 
 								if ("w" != answer.Trim().ToLower() || "" != answer.Trim().ToLower())
 								{
@@ -115,9 +129,11 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 								}
 								else
 								{
-									AnsiConsole.MarkupLine("User input didn't recognized - interrupt ot still wait for response? [i\\W]");
+									AnsiConsole.MarkupLine("User input didn't recognized - interrupt ot still wait for response? [[i/W]]");
 								}
 							}
+
+							Console.SetIn(new StreamReader(Console.OpenStandardInput()));
 						}
 						while (!userAnswered);
 					};
@@ -125,12 +141,22 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 					try
 					{
 						var resp = chat.SendAsync(message, Tools, cancellationToken: s.Token);
+
 						await foreach (var answerToken in resp)
 							AnsiConsole.MarkupInterpolated($"[{AiTextColor}]{answerToken}[/]");
 					}
 					catch (OllamaException ex)
 					{
 						AnsiConsole.MarkupLineInterpolated($"[{ErrorTextColor}]{ex.Message}[/]");
+					}
+
+					try
+					{
+						s.Cancel();
+					}
+					catch (Exception ex)
+					{
+						//AnsiConsole.MarkupLineInterpolated($"[{ErrorTextColor}]{ex.Message}[/]");
 					}
 
 					AnsiConsole.WriteLine();

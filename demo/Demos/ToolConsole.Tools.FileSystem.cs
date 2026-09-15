@@ -38,6 +38,7 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string CommandLineToolExecute(string commandLine)
 	{
+		Console.WriteLine("DEBUG: Executing command-line tool: " + commandLine);
 		// 1. Configure the process start information
 		ProcessStartInfo startInfo = new ProcessStartInfo
 		{

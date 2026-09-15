@@ -22,6 +22,11 @@ public class ConditionalCancellationTokenSource : CancellationTokenSource
 
 	private void TimerCallback(object state)
 	{
+		if (this.Token.IsCancellationRequested)
+		{
+			return;
+		}
+
 		if (this.OnTimeoutElapsed != null)
 		{
 			var aaaa1 = new ConditionalCancellationTokenSourceEventArgs { ElapsedTimeout = _delay, NewTimeout = TimeSpan.Zero };
