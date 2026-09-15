@@ -31,27 +31,41 @@ public partial class ToolConsole
 	public static string FileRead(string path) => System.IO.File.ReadAllText(path);
 
 	/// <summary>
-	/// Executes a local command-line application/tool.
+	/// Executes a local command-line application/tool with arguments(parameters).
 	/// </summary>
-	/// <param name="commandLineTool">The full path to the command-line tool to execute or command name for shell commands.</param>
-	/// <param name="arguments">The arguments to pass to the command-line tool.</param>
+	/// <param name="commandLine">The complete command or program with parameters for execution.</param>
 	/// <returns>The result of the command-line tool execution.</returns>
 	[OllamaTool]
-	public static string CommandLineToolExecute(string commandLineTool, string arguments)
+	public static string CommandLineToolExecute(string commandLine)
 	{
+		// 1. Configure the process start information
+		ProcessStartInfo startInfo = new ProcessStartInfo
+		{
+			FileName = commandLine,          // Use "powershell.exe" for PowerShell
+			Arguments = string.Empty,               // arguments to pass to the command-line tool
+			RedirectStandardOutput = true,       // Allows C# to read the output
+			RedirectStandardError = true,        // Allows C# to read errors
+			UseShellExecute = false,             // Required to redirect streams
+			CreateNoWindow = true                // Runs the process invisibly
+		};
+
+
+		if (commandLine.StartsWith("\""))
+		{
+			string pattern = "^\\s*\"(?<command>.*)\"\\s";
+			//string pattern = @"^\s*""(?<command>.*)""\s";
+			var match = System.Text.RegularExpressions.Regex.Match(pattern, commandLine);
+			startInfo.FileName = match.Groups["command"].Value;
+			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length + 2).Trim(); // +2 to account for the quotes and space
+		}
+		else
+		{
+			startInfo.FileName =  commandLine.Split(' ')[0];
+			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
+		}
+
 		try
 		{
-			// 1. Configure the process start information
-			ProcessStartInfo startInfo = new ProcessStartInfo
-			{
-				FileName = commandLineTool,          // Use "powershell.exe" for PowerShell
-				Arguments = arguments,               // arguments to pass to the command-line tool
-				RedirectStandardOutput = true,       // Allows C# to read the output
-				RedirectStandardError = true,        // Allows C# to read errors
-				UseShellExecute = false,             // Required to redirect streams
-				CreateNoWindow = true                // Runs the process invisibly
-			};
-
 			// 2. Run the process and read the output
 			using (Process process = Process.Start(startInfo))
 			{
@@ -59,7 +73,7 @@ public partial class ToolConsole
 				process.WaitForExit();
 
 				StringBuilder sb = new StringBuilder();
-				sb.AppendLine($"Executed command-line tool: {commandLineTool} {arguments}");
+				sb.AppendLine($"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"");
 				sb.AppendLine($"Exit code: {process.ExitCode}");
 
 				// Read the output and errors
@@ -80,7 +94,7 @@ public partial class ToolConsole
 		catch (Exception ex)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.AppendLine($"An error occurred while executing the command-line tool [ {commandLineTool} {arguments} ]:");
+			sb.AppendLine($"An error occurred while executing the command-line tool [ \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\" ]:");
 			sb.AppendLine($"Error: {ex.Message}");
 
 			Console.WriteLine(sb.ToString());

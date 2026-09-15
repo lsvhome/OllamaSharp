@@ -91,7 +91,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 					ConditionalCancellationTokenSource s = new ConditionalCancellationTokenSource(TimeSpan.FromMinutes(10));
 					s.OnTimeoutElapsed += (object sender, ConditionalCancellationTokenSourceEventArgs aargs) =>
 					{
-						AnsiConsole.MarkupLine("Timeout elapsed - interrupt ot still wait for response? [i/W]");
+						AnsiConsole.MarkupLine("Timeout elapsed - interrupt ot still wait for response? [i\\W]");
 						bool userAnswered = false;
 						do
 						{
@@ -115,7 +115,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 								}
 								else
 								{
-									AnsiConsole.MarkupLine("User input didn't recognized - interrupt ot still wait for response? [i/W]");
+									AnsiConsole.MarkupLine("User input didn't recognized - interrupt ot still wait for response? [i\\W]");
 								}
 							}
 						}
