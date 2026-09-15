@@ -96,7 +96,8 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 
 					//AnsiConsole.MarkupLine("Timeout happened - interrupt or still wait for response? [[i/W]]");
 
-					ConditionalCancellationTokenSource s = new ConditionalCancellationTokenSource(TimeSpan.FromSeconds(4));
+					CancellationTokenSource s = new CancellationTokenSource();
+					/*
 					s.OnTimeoutElapsed += (object sender, ConditionalCancellationTokenSourceEventArgs aargs) =>
 					{
 						bool userAnswered = false;
@@ -137,6 +138,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 						}
 						while (!userAnswered);
 					};
+					*/
 
 					try
 					{
@@ -150,6 +152,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 						AnsiConsole.MarkupLineInterpolated($"[{ErrorTextColor}]{ex.Message}[/]");
 					}
 
+					/*
 					try
 					{
 						s.Cancel();
@@ -158,6 +161,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 					{
 						//AnsiConsole.MarkupLineInterpolated($"[{ErrorTextColor}]{ex.Message}[/]");
 					}
+					*/
 
 					AnsiConsole.WriteLine();
 				} while (!string.IsNullOrEmpty(message));

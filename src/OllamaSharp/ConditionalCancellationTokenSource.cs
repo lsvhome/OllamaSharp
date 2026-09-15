@@ -1,3 +1,4 @@
+/*
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -57,3 +58,4 @@ public class ConditionalCancellationTokenSourceEventArgs : EventArgs
 	public TimeSpan NewTimeout { get; set; }
 }
 
+*/
