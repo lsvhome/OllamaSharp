@@ -31,63 +31,60 @@ public partial class ToolConsole
 	public static string FileRead(string path) => System.IO.File.ReadAllText(path);
 
 	/// <summary>
-	/// Executes a shell script using Bash.
+	/// Executes a local command-line application/tool.
 	/// </summary>
-	/// <param name="script">The shell script to execute.</param>
-	/// <returns>The result of the shell script execution.</returns>
+	/// <param name="commandLineTool">The full path to the command-line tool to execute or command name for shell commands.</param>
+	/// <param name="arguments">The arguments to pass to the command-line tool.</param>
+	/// <returns>The result of the command-line tool execution.</returns>
 	[OllamaTool]
-	public static string BashExecute(string script)
+	public static string CommandLineToolExecute(string commandLineTool, string arguments)
 	{
-		try{
-		// TODO: Execute the shell script and return the output
-		string shellFileName = "/bin/bash";
-
-		string escapedScript = script.Replace("\"", "\\\"");
-		// 1. Configure the process start information
-		ProcessStartInfo startInfo = new ProcessStartInfo
+		try
 		{
-			FileName = shellFileName,          // Use "powershell.exe" for PowerShell
-			Arguments = $"-c \"{escapedScript}\"",    // "-c" tells bash to run the command and exit
-			RedirectStandardOutput = true,     // Allows C# to read the output
-			RedirectStandardError = true,      // Allows C# to read errors
-			UseShellExecute = false,           // Required to redirect streams
-			CreateNoWindow = true              // Runs the process invisibly
-		};
-
-		Console.WriteLine($"Arguments: [ {startInfo.Arguments} ]");
-
-		// 2. Run the process and read the output
-		using (Process process = Process.Start(startInfo))
-		{
-			// Read the output and errors
-			string result = process.StandardOutput.ReadToEnd();
-			string errors = process.StandardError.ReadToEnd();
-
-			process.WaitForExit(); // Wait for the command to finish
-
-			StringBuilder sb = new StringBuilder();
-			sb.AppendLine($"Executed script: {script}");
-			sb.AppendLine($"Exit code: {process.ExitCode}");
-
-			// 3. Use the result
-			sb.AppendLine("Output:");
-			sb.AppendLine(result);
-
-			if (!string.IsNullOrEmpty(errors))
+			// 1. Configure the process start information
+			ProcessStartInfo startInfo = new ProcessStartInfo
 			{
-				sb.AppendLine("Errors:");
-				sb.AppendLine(errors);
+				FileName = commandLineTool,          // Use "powershell.exe" for PowerShell
+				Arguments = arguments,               // arguments to pass to the command-line tool
+				RedirectStandardOutput = true,       // Allows C# to read the output
+				RedirectStandardError = true,        // Allows C# to read errors
+				UseShellExecute = false,             // Required to redirect streams
+				CreateNoWindow = true                // Runs the process invisibly
+			};
+
+			// 2. Run the process and read the output
+			using (Process process = Process.Start(startInfo))
+			{
+				// Wait for the command to finish
+				process.WaitForExit();
+
+				StringBuilder sb = new StringBuilder();
+				sb.AppendLine($"Executed command-line tool: {commandLineTool} {arguments}");
+				sb.AppendLine($"Exit code: {process.ExitCode}");
+
+				// Read the output and errors
+				sb.AppendLine("Output:");
+				sb.AppendLine(process.StandardOutput.ReadToEnd());
+
+				string errors = process.StandardError.ReadToEnd();
+				if (!string.IsNullOrEmpty(errors))
+				{
+					sb.AppendLine("Errors:");
+					sb.AppendLine(errors);
+				}
+
+				Console.WriteLine(sb.ToString());
+				return sb.ToString();
 			}
-
-			Console.WriteLine(sb.ToString());
-			return sb.ToString();
-		}
-
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"An error occurred while executing the script: {ex.Message}");
-			return $"Error: {ex.Message}";
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine($"An error occurred while executing the command-line tool [ {commandLineTool} {arguments} ]:");
+			sb.AppendLine($"Error: {ex.Message}");
+
+			Console.WriteLine(sb.ToString());
+			return sb.ToString();
 		}
 	}
 }
