@@ -19,7 +19,7 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="path">The path of the file to write to.</param>
 	/// <param name="contents">The contents to write to the file.</param>
-	//[OllamaTool]
+	[OllamaTool]
 	public static void FileWrite(string path, string contents) => System.IO.File.WriteAllText(path, contents);
 
 	/// <summary>
@@ -27,7 +27,7 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="path">The path of the file to read.</param>
 	/// <returns>The contents of the file.</returns>
-	//[OllamaTool]
+	[OllamaTool]
 	public static string FileRead(string path) => System.IO.File.ReadAllText(path);
 
 	/// <summary>
@@ -96,6 +96,76 @@ public partial class ToolConsole
 		{
 			StringBuilder sb = new StringBuilder();
 			sb.AppendLine($"An error occurred while executing the command-line tool [ \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\" ]:");
+			sb.AppendLine($"Error: {ex.Message}");
+
+			Console.WriteLine(sb.ToString());
+			return sb.ToString();
+		}
+	}
+
+	/// <summary>
+	/// Executes a list of commands sequentially.
+	/// </summary>
+	/// <param name="script">The list of commands to execute. Each line is a separate command to execute.</param>
+	/// <returns>The result of the command-line tool execution.</returns>
+	[OllamaTool]
+	public static string MultilineScriptExecute(string script)
+	{
+		StringBuilder sb0 = new StringBuilder();
+		
+		sb0.AppendLine("#!/bin/bash");
+		sb0.AppendLine("# BEGIN OF SCRIPT");
+		sb0.AppendLine();
+		sb0.AppendLine(script);
+		sb0.AppendLine();
+		sb0.AppendLine("# END OF SCRIPT");
+
+		File.WriteAllText("script.sh", sb0.ToString());
+
+		Console.WriteLine("DEBUG: Executing script: \r\n" + sb0.ToString());
+		// 1. Configure the process start information
+		ProcessStartInfo startInfo = new ProcessStartInfo
+		{
+			FileName = "/bin/bash",              // Use "powershell.exe" for PowerShell
+			Arguments = "script.sh",             // arguments to pass to the command-line tool
+			RedirectStandardOutput = true,       // Allows C# to read the output
+			RedirectStandardError = true,        // Allows C# to read errors
+			UseShellExecute = false,             // Required to redirect streams
+			CreateNoWindow = true                // Runs the process invisibly
+		};
+
+		try
+		{
+			// 2. Run the process and read the output
+			using (Process process = Process.Start(startInfo))
+			{
+				// Wait for the command to finish
+				process.WaitForExit();
+
+				StringBuilder sb = new StringBuilder();
+				sb.AppendLine($"Exit code: {process.ExitCode}");
+
+				// Read the output and errors
+				sb.AppendLine("Output:");
+				sb.AppendLine(process.StandardOutput.ReadToEnd());
+
+				string errors = process.StandardError.ReadToEnd();
+				if (!string.IsNullOrEmpty(errors))
+				{
+					sb.AppendLine("Errors:");
+					sb.AppendLine(errors);
+				}
+
+				Console.WriteLine(sb.ToString());
+				return sb.ToString();
+			}
+		}
+		catch (Exception ex)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine($"An error occurred while executing multiline script:");
+			sb.AppendLine(script);
+			sb.AppendLine("--------------------------------");
 			sb.AppendLine($"Error: {ex.Message}");
 
 			Console.WriteLine(sb.ToString());
