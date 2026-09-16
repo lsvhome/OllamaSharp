@@ -209,40 +209,41 @@ public class ToolSourceGenerator : IIncrementalGenerator
 			var safeName = ToValidIdentifier(pName);
 			var pType = p.Type.ToDisplayString();
 			var tName = p.Type.Name;
+			var indent = "\t\t\t\t";
 
 			if (p.Type.TypeKind == TypeKind.Enum)
 			{
 				if (p.IsOptional)
 				{
 					var defaultValue = p.ExplicitDefaultValue?.ToString() ?? p.Type.GetMembers().OfType<IFieldSymbol>().FirstOrDefault()?.Name;
-					paramLines.Add($@"            {pType} {safeName} = ({pType})(Enum.TryParse(typeof({pType}), args.ContainsKey(""{pName}"") ? args[""{pName}""]?.ToString() ?? ""{defaultValue}"" : ""{defaultValue}"", ignoreCase: true, out var parsedEnumValue) ? parsedEnumValue : {defaultValue});");
+					paramLines.Add($@"{indent}{pType} {safeName} = ({pType})(Enum.TryParse(typeof({pType}), args.ContainsKey(""{pName}"") ? args[""{pName}""]?.ToString() ?? ""{defaultValue}"" : ""{defaultValue}"", ignoreCase: true, out var parsedEnumValue) ? parsedEnumValue : {defaultValue});");
 				}
 				else
 				{
-					paramLines.Add($@"            {pType} {safeName} = ({pType})Enum.Parse(typeof({pType}), args[""{pName}""]?.ToString() ?? """", ignoreCase: true);");
+					paramLines.Add($@"{indent}{pType} {safeName} = ({pType})Enum.Parse(typeof({pType}), args[""{pName}""]?.ToString() ?? """", ignoreCase: true);");
 				}
 			}
 			else if (pType.StartsWith("bool", StringComparison.OrdinalIgnoreCase))
 			{
 				if (!p.IsOptional)
 				{
-					paramLines.Add($@"            {pType} {safeName} = ({pType})args[""{pName}""];");
+					paramLines.Add($@"{indent}{pType} {safeName} = ({pType})args[""{pName}""];");
 				}
 				else if (p.ExplicitDefaultValue is bool defaultBoolValue)
 				{
-					paramLines.Add($@"            {pType} {safeName} = args.ContainsKey(""{pName}"") ? ({pType})args[""{pName}""] : {defaultBoolValue.ToString().ToLowerInvariant()};");
+					paramLines.Add($@"{indent}{pType} {safeName} = args.ContainsKey(""{pName}"") ? ({pType})args[""{pName}""] : {defaultBoolValue.ToString().ToLowerInvariant()};");
 				}
 				else
 				{
-					paramLines.Add($@"            {pType} {safeName} = args.ContainsKey(""{pName}"") ? ({pType})args[""{pName}""] : null;");
+					paramLines.Add($@"{indent}{pType} {safeName} = args.ContainsKey(""{pName}"") ? ({pType})args[""{pName}""] : null;");
 				}
 			}
 			else if (IsNumericType(tName))
 			{
 				if (p.IsOptional)
-					paramLines.Add($@"            {pType} {safeName} = args.ContainsKey(""{pName}"") ? Convert.To{tName}(args[""{pName}""]) : {(p.ExplicitDefaultValue ?? 0)};");
+					paramLines.Add($@"{indent}{pType} {safeName} = args.ContainsKey(""{pName}"") ? Convert.To{tName}(args[""{pName}""]) : {(p.ExplicitDefaultValue ?? 0)};");
 				else
-					paramLines.Add($@"            {pType} {safeName} = Convert.To{tName}(args[""{pName}""]);");
+					paramLines.Add($@"{indent}{pType} {safeName} = Convert.To{tName}(args[""{pName}""]);");
 			}
 			else
 			{
@@ -251,19 +252,19 @@ public class ToolSourceGenerator : IIncrementalGenerator
 					if (p.IsOptional)
 					{
 						var def = p.ExplicitDefaultValue is null ? "\"\"" : $"\"{p.ExplicitDefaultValue}\"";
-						paramLines.Add($@"            {pType} {safeName} = ({pType}?)(args.ContainsKey(""{pName}"") ? args[""{pName}""] : null) ?? {def};");
+						paramLines.Add($@"{indent}{pType} {safeName} = ({pType}?)(args.ContainsKey(""{pName}"") ? args[""{pName}""] : null) ?? {def};");
 					}
 					else
 					{
-						paramLines.Add($@"            {pType} {safeName} = ({pType}?)args[""{pName}""] ?? """";");
+						paramLines.Add($@"{indent}{pType} {safeName} = ({pType}?)args[""{pName}""] ?? """";");
 					}
 				}
 				else
 				{
 					if (p.IsOptional && p.ExplicitDefaultValue != null)
-						paramLines.Add($@"            {pType} {safeName} = ({pType}?)(args.ContainsKey(""{pName}"") ? args[""{pName}""] : null) ?? ({pType}){p.ExplicitDefaultValue};");
+						paramLines.Add($@"{indent}{pType} {safeName} = ({pType}?)(args.ContainsKey(""{pName}"") ? args[""{pName}""] : null) ?? ({pType}){p.ExplicitDefaultValue};");
 					else
-						paramLines.Add($@"            {pType} {safeName} = ({pType}?)args[""{pName}""];");
+						paramLines.Add($@"{indent}{pType} {safeName} = ({pType}?)args[""{pName}""];");
 				}
 			}
 
@@ -289,20 +290,39 @@ public class ToolSourceGenerator : IIncrementalGenerator
 
 		var callPart = isAsync
 			? $@"var result = await {className}.{methodName}({joinedParams});
-            return result;"
+            	return result;"
 			: returnType.SpecialType == SpecialType.System_Void
 				? $@"{className}.{methodName}({joinedParams});
-            return null;"
+            	return null;"
 				: $@"var result = {className}.{methodName}({joinedParams});
-            return result;";
+            	return result;";
 
 		return
 $@"{(isAsync ? ASYNC_SIGNATURE : SYNC_SIGNATURE)}
         {{
-            if (args == null) args = new Dictionary<string, object?>();
+			try
+			{{
+            	if (args == null) args = new Dictionary<string, object?>();
 {paramBlock}
 
-            {callPart}
+            	{callPart}
+			}}
+			catch (Exception ex)
+			{{
+				return new
+				{{
+					Tool = this,
+					ToolCall = new
+					{{
+						Function = this.Function,
+						Arguments = args
+					}},
+					Result = ""False"",
+					Error = ex.Message,
+					Exception = ex
+				}};
+
+			}}
         }}";
 	}
 

@@ -23,12 +23,85 @@ public partial class ToolConsole
 	public static void FileWrite(string path, string contents) => System.IO.File.WriteAllText(path, contents);
 
 	/// <summary>
+	/// Delete a file at a given path.
+	/// </summary>
+	/// <param name="path">The path of the file to delete.</param>
+	[OllamaTool]
+	public static void FileDelete(string path) => System.IO.File.Delete(path);
+
+	/// <summary>
 	/// Read file contents from a given path.
 	/// </summary>
 	/// <param name="path">The path of the file to read.</param>
 	/// <returns>The contents of the file.</returns>
 	[OllamaTool]
 	public static string FileRead(string path) => System.IO.File.ReadAllText(path);
+
+	/// <summary>
+	/// Check if a file exists at a given path.
+	/// </summary>
+	/// <param name="path">The path of the file to check.</param>
+	/// <returns>A boolean indicating whether the file exists.</returns>
+	[OllamaTool]
+	public static string FileExists(string path) => System.IO.File.Exists(path).ToString();
+
+	/// <summary>
+	/// Move (rename) a file from one path to another.
+	/// </summary>
+	/// <param name="oldPath">The current path of the file.</param>
+	/// <param name="newPath">The new path for the file.</param>
+	/// <returns>A message indicating the result of the operation.</returns>
+	[OllamaTool]
+	public static string FileMove(string oldPath, string newPath)
+	{
+		System.IO.File.Move(oldPath, newPath);
+		return $"Moved file from {oldPath} to {newPath}";
+	}
+
+	/// <summary>
+	/// Check if a directory exists at a given path.
+	/// </summary>
+	/// <param name="path">The path of the directory to check.</param>
+	/// <returns>A boolean indicating whether the directory exists.</returns>
+	[OllamaTool]
+	public static string DirectoryExists(string path) => System.IO.Directory.Exists(path).ToString();
+
+	/// <summary>
+	/// Create a directory at a given path.
+	/// </summary>
+	/// <param name="path">The path of the directory to create.</param>
+	/// <returns>The directory info of the created directory.</returns>
+	[OllamaTool]
+	public static string DirectoryCreate(string path) => $"Created directory: {System.IO.Directory.CreateDirectory(path).FullName}";
+
+	/// <summary>
+	/// Delete a directory at a given path.
+	/// </summary>
+	/// <param name="path">The path of the directory to delete.</param>
+	/// <returns>A boolean indicating whether the directory was deleted.</returns>
+	[OllamaTool]
+	public static string DirectoryDelete(string path) { System.IO.Directory.Delete(path); return $"Deleted directory: {path}"; }
+
+	/// <summary>
+	/// Move (rename) a directory from one path to another.
+	/// </summary>
+	/// <param name="oldPath">The current path of the directory.</param>
+	/// <param name="newPath">The new path for the directory.</param>
+	/// <returns>A message indicating the result of the operation.</returns>
+	[OllamaTool]
+	public static string DirectoryMove(string oldPath, string newPath)
+	{
+		System.IO.Directory.Move(oldPath, newPath);
+		return $"Moved directory from {oldPath} to {newPath}";
+	}
+
+	/// <summary>
+	/// Get the contents of a directory at a given path.
+	/// </summary>
+	/// <param name="path">The path of the directory to read.</param>
+	/// <returns>A list of files and subdirectories in the specified directory.</returns>
+	[OllamaTool]
+	public static string DirectoryContents(string path) { return $"Contents of directory {path}: {string.Join(System.Environment.NewLine, System.IO.Directory.GetFileSystemEntries(path))}"; }
 
 	/// <summary>
 	/// Executes a local command-line application/tool with arguments(parameters).

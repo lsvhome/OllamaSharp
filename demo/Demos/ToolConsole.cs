@@ -14,7 +14,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 {
 	public static List<string> CommandHistory = new List<string>();
 
-	//public static List<OllamaSharp.Models.Chat.Tool> Tools1 { get; } = [new GetWeatherTool(), new GetLatLonAsyncTool(), new GetPopulationTool()];
+	//public static List<OllamaSharp.Models.Chat.Tool> Tools1 { get; } = [new FileWriteTool()];
 	/// <summary>
 	/// Gets the collection of available tools.
 	/// </summary>
@@ -37,6 +37,8 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 		{
 			var keepChatting = true;
 			var systemPrompt = ReadInput($"Define a system prompt [{HintTextColor}](optional)[/]");
+			if (string.IsNullOrWhiteSpace(systemPrompt))
+				systemPrompt = "You are a Senior Software Architect. You can use tools for your work.";
 
 			do
 			{
@@ -49,7 +51,8 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 				AnsiConsole.MarkupLine($"[{HintTextColor}]Enter [{AccentTextColor}]{LIST_TOOLS_COMMAND}[/] to list all available tools.[/]");
 
 				var chat = new Chat(Ollama, systemPrompt) { Think = Think };
-				chat.OnThink += (sender, thoughts) => AnsiConsole.MarkupInterpolated($"[{AiThinkTextColor}]{thoughts}[/]");
+				//chat.OnThink += (sender, thoughts) => AnsiConsole.MarkupInterpolated($"[{AiThinkTextColor}]{thoughts}[/]");
+				chat.OnThink += (sender, thoughts) => Console.WriteLine(thoughts);
 				chat.OnToolResult += (sender, result) => RenderToolResult(result);
 
 				string message;
@@ -151,6 +154,10 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 					{
 						AnsiConsole.MarkupLineInterpolated($"[{ErrorTextColor}]{ex.Message}[/]");
 					}
+					catch (Exception ex)
+					{
+						Console.WriteLine($"An error occurred while sending the message: {ex.Message}");
+					}
 
 					/*
 					try
@@ -171,9 +178,16 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 
 	private static void RenderToolResult(ToolResult toolResult)
 	{
-		AnsiConsole.MarkupLine($"[gray]Tool: [/][purple]{RenderToolSignature(toolResult)}[/]");
-		AnsiConsole.MarkupLineInterpolated($"      = [blue]{toolResult.Result?.ToString() ?? ""}[/]");
-		AnsiConsole.WriteLine("");
+		try
+		{
+			AnsiConsole.MarkupLine($"[gray]Tool: [/][purple]{RenderToolSignature(toolResult)}[/]");
+			AnsiConsole.MarkupLineInterpolated($"      = [blue]{toolResult.Result?.ToString() ?? ""}[/]");
+			AnsiConsole.WriteLine("");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"An error occurred while rendering tool result: {ex.Message}");
+		}
 	}
 
 	private static string RenderToolSignature(ToolResult toolResult)

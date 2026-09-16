@@ -13,22 +13,15 @@ var connected = false;
 
 do
 {
-	AnsiConsole.MarkupLine($"Enter the Ollama [{OllamaConsole.AccentTextColor}]machine name[/] or [{OllamaConsole.AccentTextColor}]endpoint url[/]");
 
-	var url = string.Empty;
-	//url = OllamaConsole.ReadInput();
+	var url = System.Environment.GetEnvironmentVariable("OLLAMA_HOST");
+
+	AnsiConsole.MarkupLine($"Ollama endpoint url: '{url}'");
 
 	if (string.IsNullOrWhiteSpace(url))
 	{
-		//url = "http://ollama:11434";
-		url = "http://localhost:11434";
+		 throw new Exception("You must provide ollamaendpoint url with env variable 'OLLAMA_HOST'.");
 	}
-
-	if (!url.StartsWith("http"))
-		url = "http://" + url;
-
-	if (url.IndexOf(':', 5) < 0)
-		url += ":11434";
 
 	var uri = new Uri(url);
 	Console.WriteLine($"Connecting to {uri} ...");
