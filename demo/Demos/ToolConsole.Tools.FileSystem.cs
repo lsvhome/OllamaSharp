@@ -20,14 +20,14 @@ public partial class ToolConsole
 	/// <param name="path">The path of the file to write to.</param>
 	/// <param name="contents">The contents to write to the file.</param>
 	[OllamaTool]
-	public static void FileWrite(string path, string contents) => System.IO.File.WriteAllText(path, contents);
+	public static string FileWrite(string path, string contents) { System.IO.File.WriteAllText(path, contents); return $"Contents has been written successfully to: {path}"; }
 
 	/// <summary>
 	/// Delete a file at a given path.
 	/// </summary>
 	/// <param name="path">The path of the file to delete.</param>
 	[OllamaTool]
-	public static void FileDelete(string path) => System.IO.File.Delete(path);
+	public static string FileDelete(string path) { System.IO.File.Delete(path); return $"File deleted: {path}"; }
 
 	/// <summary>
 	/// Read file contents from a given path.
@@ -57,6 +57,21 @@ public partial class ToolConsole
 		System.IO.File.Move(oldPath, newPath);
 		return $"Moved file from {oldPath} to {newPath}";
 	}
+
+	/// <summary>
+	/// Gets the current working directory.
+	/// </summary>
+	/// <returns>The current working directory.</returns>
+	[OllamaTool]
+	public static string GetCurrentDirectory() => System.IO.Directory.GetCurrentDirectory();
+
+	/// <summary>
+	/// Sets (changes) the current working directory.
+	/// </summary>
+	/// <param name="path">The path of the directory to set as the current working directory.</param>
+	/// <returns>The current working directory.</returns>
+	[OllamaTool]
+	public static string SetCurrentDirectory(string path) { System.IO.Directory.SetCurrentDirectory(path); return $"Current directory now is: \"{System.IO.Directory.GetCurrentDirectory()}\""; }
 
 	/// <summary>
 	/// Check if a directory exists at a given path.
