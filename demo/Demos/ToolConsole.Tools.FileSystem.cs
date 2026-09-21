@@ -1,6 +1,10 @@
 using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using OllamaSharp;
+using OllamaSharp.Models.Exceptions;
+using OllamaSharp.Tools;
 
 namespace OllamaApiConsole.Demos;
 
@@ -16,14 +20,14 @@ public partial class ToolConsole
 	/// <param name="contents">The contents to write to the file.</param>
 	[OllamaTool]
 	public static string FileWrite(string path, string contents)
-	{
+	{ 
 		var parentDirectory = Path.GetDirectoryName(path);
 		if (!string.IsNullOrWhiteSpace(parentDirectory))
 		{
 			EnsureDirectoryExists(parentDirectory);
 		}
-
-		System.IO.File.WriteAllText(path, contents);
+		
+		System.IO.File.WriteAllText(path, contents); 
 		return $"Contents has been written successfully to: {path}";
 	}
 
@@ -163,6 +167,17 @@ public partial class ToolConsole
 	public static string DirectoryContents(string path) { return $"Contents of directory {path}: {string.Join(System.Environment.NewLine, System.IO.Directory.GetFileSystemEntries(path))}"; }
 
 	/// <summary>
+	/// Get the recursive contents of a directory at a given path.
+	/// </summary>
+	/// <param name="path">The path of the directory to read.</param>
+	/// <returns>A list of files and subdirectories in the specified directory recursively.</returns>
+	[OllamaTool]
+	public static string DirectoryContentsRecursive(string path)
+	{ 
+		return $"Contents of directory {path}:{System.Environment.NewLine}{CommandLineToolExecute("ls -lR", true)}";
+	}
+
+	/// <summary>
 	/// Executes a local application/tool with arguments(parameters) and without chaining commands. Just execution of single program.
 	/// Program path and arguments must be provided in a single string. Example:
 	/// "C:\Program Files\MyApp\myapp.exe --option1 value1 --option2 value2"
@@ -171,7 +186,7 @@ public partial class ToolConsole
 	/// <param name="commandLine">The complete command or program with parameters for execution.</param>
 	/// <returns>The result of the command-line tool execution.</returns>
 	[OllamaTool]
-	public static string CommandLineToolExecute(string commandLine)
+	public static string CommandLineToolExecute(string commandLine, bool bareOutputOnSuccess = false)
 	{
 		Console.WriteLine("DEBUG: Executing single-line command-line tool: " + commandLine);
 		// 1. Configure the process start information
@@ -196,7 +211,7 @@ public partial class ToolConsole
 		}
 		else
 		{
-			startInfo.FileName = commandLine.Split(' ')[0];
+			startInfo.FileName =  commandLine.Split(' ')[0];
 			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
 		}
 
@@ -208,12 +223,18 @@ public partial class ToolConsole
 				// Wait for the command to finish
 				process.WaitForExit();
 
-				StringBuilder sb = new StringBuilder();
-				sb.AppendLine($"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"");
-				sb.AppendLine($"Exit code: {process.ExitCode}");
+				bareOutputOnSuccess = bareOutputOnSuccess && process.ExitCode == 0;
 
-				// Read the output and errors
-				sb.AppendLine("Output:");
+				StringBuilder sb = new StringBuilder();
+				if(!bareOutputOnSuccess)
+				{
+					sb.AppendLine($"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"");
+					sb.AppendLine($"Exit code: {process.ExitCode}");
+
+					// Read the output and errors
+					sb.AppendLine("Output:");
+				}
+
 				sb.AppendLine(process.StandardOutput.ReadToEnd());
 
 				string errors = process.StandardError.ReadToEnd();
@@ -247,7 +268,7 @@ public partial class ToolConsole
 	public static string MultilineScriptExecute(string script)
 	{
 		StringBuilder sb0 = new StringBuilder();
-
+		
 		sb0.AppendLine("#!/bin/bash");
 		sb0.AppendLine("# BEGIN OF SCRIPT");
 		sb0.AppendLine();
@@ -271,11 +292,12 @@ public partial class ToolConsole
 
 		try
 		{
-			// 2. Run the process and read the output
-			using (Process process = Process.Start(startInfo))
+            // 2. Run the process and read the output
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+            using (Process process = Process.Start(startInfo))
 			{
 				// Wait for the command to finish
-				process.WaitForExit();
+				process!.WaitForExit();
 
 				StringBuilder sb = new StringBuilder();
 				sb.AppendLine($"Exit code: {process.ExitCode}");
@@ -294,7 +316,8 @@ public partial class ToolConsole
 				Console.WriteLine(sb.ToString());
 				return sb.ToString();
 			}
-		}
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+        }
 		catch (Exception ex)
 		{
 			StringBuilder sb = new StringBuilder();
