@@ -38,7 +38,17 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 			var keepChatting = true;
 			var systemPrompt = ReadInput($"Define a system prompt [{HintTextColor}](optional)[/]");
 			if (string.IsNullOrWhiteSpace(systemPrompt))
-				systemPrompt = "You are a Senior Software Architect. You can use tools for your work.";
+				systemPrompt = @"You are a Senior Software Architect.
+You can use tools for your work.
+When source changes are requested, they should be split into small, meaningful pieces.
+Each source change should be committed with a relevant message.
+Build & Quality: The solution must be buildable, and all warnings must be fixed. If a warning cannot be fixed, it must be documented in the 'Issues' paragraph of technical-design.md with an explanation of why it cannot be fixed.
+Testing: All tests must be passing (green).
+Documentation: The technical-design.md file must be updated to reflect the new state of the system.
+Formatting: dotnet format must be executed before committing changes.
+Commit Message: The commit message must clearly reflect the changes that have been implemented.
+Follow repo-specific rules in file AGENTS.md when it is present.
+				";
 
 			do
 			{
@@ -180,8 +190,8 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 	{
 		try
 		{
-			AnsiConsole.MarkupLine($"[gray]Tool: [/][purple]{RenderToolSignature(toolResult)}[/]");
-			AnsiConsole.MarkupLineInterpolated($"      = [blue]{toolResult.Result?.ToString() ?? ""}[/]");
+			Console.WriteLine($"{RenderToolSignature(toolResult)}");
+			Console.WriteLine($"      = {toolResult.Result?.ToString() ?? ""}");
 			AnsiConsole.WriteLine("");
 		}
 		catch (Exception ex)
@@ -201,7 +211,7 @@ public partial class ToolConsole(IOllamaApiClient ollama) : OllamaConsole(ollama
 		{
 			foreach (var argument in toolResult.ToolCall.Function.Arguments)
 			{
-				builder.Append($"[gray]{separator}{argument.Key}:[/] {argument.Value}");
+				builder.Append($"{separator}{argument.Key}: {argument.Value}");
 				separator = ", ";
 			}
 		}

@@ -1,11 +1,6 @@
 using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using OllamaSharp;
-using OllamaSharp.Models.Exceptions;
-using OllamaSharp.Tools;
-using Spectre.Console;
 
 namespace OllamaApiConsole.Demos;
 
@@ -20,7 +15,17 @@ public partial class ToolConsole
 	/// <param name="path">The path of the file to write to.</param>
 	/// <param name="contents">The contents to write to the file.</param>
 	[OllamaTool]
-	public static string FileWrite(string path, string contents) { System.IO.File.WriteAllText(path, contents); return $"Contents has been written successfully to: {path}"; }
+	public static string FileWrite(string path, string contents)
+	{
+		var parentDirectory = Path.GetDirectoryName(path);
+		if (!string.IsNullOrWhiteSpace(parentDirectory))
+		{
+			EnsureDirectoryExists(parentDirectory);
+		}
+
+		System.IO.File.WriteAllText(path, contents);
+		return $"Contents has been written successfully to: {path}";
+	}
 
 	/// <summary>
 	/// Delete a file at a given path.
@@ -54,6 +59,12 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string FileMove(string oldPath, string newPath)
 	{
+		var parentDirectory = Path.GetDirectoryName(newPath);
+		if (!string.IsNullOrWhiteSpace(parentDirectory))
+		{
+			EnsureDirectoryExists(parentDirectory);
+		}
+
 		System.IO.File.Move(oldPath, newPath);
 		return $"Moved file from {oldPath} to {newPath}";
 	}
@@ -82,12 +93,39 @@ public partial class ToolConsole
 	public static string DirectoryExists(string path) => System.IO.Directory.Exists(path).ToString();
 
 	/// <summary>
+	/// Ensure a directory exists at a given path. When directory does not exist, it will be created. If any of parent directories do not exist, they will also be created.
+	/// </summary>
+	/// <param name="path">The path of the directory to ensure.</param>
+	/// <returns>A boolean indicating whether the directory exists.</returns>
+	[OllamaTool]
+	public static string EnsureDirectoryExists(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
+		}
+
+		if (!System.IO.Directory.Exists(path))
+		{
+			var parentDirectory = Path.GetDirectoryName(path);
+			if (!string.IsNullOrWhiteSpace(parentDirectory) && !System.IO.Directory.Exists(parentDirectory))
+			{
+				EnsureDirectoryExists(parentDirectory);
+			}
+
+			System.IO.Directory.CreateDirectory(path);
+		}
+
+		return System.IO.Directory.Exists(path).ToString();
+	}
+
+	/// <summary>
 	/// Create a directory at a given path.
 	/// </summary>
 	/// <param name="path">The path of the directory to create.</param>
 	/// <returns>The directory info of the created directory.</returns>
 	[OllamaTool]
-	public static string DirectoryCreate(string path) => $"Created directory: {System.IO.Directory.CreateDirectory(path).FullName}";
+	public static string DirectoryCreate(string path) { EnsureDirectoryExists(path); return $"Created directory: {path}"; }
 
 	/// <summary>
 	/// Delete a directory at a given path.
@@ -106,6 +144,12 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string DirectoryMove(string oldPath, string newPath)
 	{
+		var parentDirectory = Path.GetDirectoryName(newPath);
+		if (!string.IsNullOrWhiteSpace(parentDirectory))
+		{
+			EnsureDirectoryExists(parentDirectory);
+		}
+
 		System.IO.Directory.Move(oldPath, newPath);
 		return $"Moved directory from {oldPath} to {newPath}";
 	}
@@ -119,14 +163,17 @@ public partial class ToolConsole
 	public static string DirectoryContents(string path) { return $"Contents of directory {path}: {string.Join(System.Environment.NewLine, System.IO.Directory.GetFileSystemEntries(path))}"; }
 
 	/// <summary>
-	/// Executes a local command-line application/tool with arguments(parameters).
+	/// Executes a local application/tool with arguments(parameters) and without chaining commands. Just execution of single program.
+	/// Program path and arguments must be provided in a single string. Example:
+	/// "C:\Program Files\MyApp\myapp.exe --option1 value1 --option2 value2"
+	/// The method will parse the command line to separate the executable path from its arguments, execute the command, and return the output and any errors encountered during execution.
 	/// </summary>
 	/// <param name="commandLine">The complete command or program with parameters for execution.</param>
 	/// <returns>The result of the command-line tool execution.</returns>
 	[OllamaTool]
 	public static string CommandLineToolExecute(string commandLine)
 	{
-		Console.WriteLine("DEBUG: Executing command-line tool: " + commandLine);
+		Console.WriteLine("DEBUG: Executing single-line command-line tool: " + commandLine);
 		// 1. Configure the process start information
 		ProcessStartInfo startInfo = new ProcessStartInfo
 		{
@@ -149,7 +196,7 @@ public partial class ToolConsole
 		}
 		else
 		{
-			startInfo.FileName =  commandLine.Split(' ')[0];
+			startInfo.FileName = commandLine.Split(' ')[0];
 			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
 		}
 
@@ -194,13 +241,13 @@ public partial class ToolConsole
 	/// <summary>
 	/// Executes a list of commands sequentially.
 	/// </summary>
-	/// <param name="script">The list of commands to execute. Each line is a separate command to execute.</param>
+	/// <param name="script">The list of commands to execute. Each line is a separate command to execute. Provided script would be placed into shell script file and executed with /bin/bash.</param>
 	/// <returns>The result of the command-line tool execution.</returns>
 	[OllamaTool]
 	public static string MultilineScriptExecute(string script)
 	{
 		StringBuilder sb0 = new StringBuilder();
-		
+
 		sb0.AppendLine("#!/bin/bash");
 		sb0.AppendLine("# BEGIN OF SCRIPT");
 		sb0.AppendLine();
@@ -210,7 +257,7 @@ public partial class ToolConsole
 
 		File.WriteAllText("script.sh", sb0.ToString());
 
-		Console.WriteLine("DEBUG: Executing script: \r\n" + sb0.ToString());
+		Console.WriteLine("DEBUG: Executing multilinescript: \r\n" + sb0.ToString());
 		// 1. Configure the process start information
 		ProcessStartInfo startInfo = new ProcessStartInfo
 		{
@@ -258,6 +305,14 @@ public partial class ToolConsole
 
 			Console.WriteLine(sb.ToString());
 			return sb.ToString();
+		}
+		finally
+		{
+			// Clean up the script file after execution
+			if (File.Exists("script.sh"))
+			{
+				File.Delete("script.sh");
+			}
 		}
 	}
 }

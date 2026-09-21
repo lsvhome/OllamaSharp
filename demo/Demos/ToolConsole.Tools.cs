@@ -1,10 +1,3 @@
-using System.Reflection;
-using System.Text;
-using OllamaSharp;
-using OllamaSharp.Models.Exceptions;
-using OllamaSharp.Tools;
-using Spectre.Console;
-
 namespace OllamaApiConsole.Demos;
 
 /// <summary>
