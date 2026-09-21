@@ -9,6 +9,7 @@ namespace OllamaApiConsole.Demos;
 /// </summary>
 public partial class ToolConsole
 {
+	public static object commandLock = new object();
 	/// <summary>
 	/// Write contents to a file at a given path.
 	/// </summary>
@@ -163,6 +164,16 @@ public partial class ToolConsole
 	public static string DirectoryContents(string path) { return $"Contents of directory {path}: {string.Join(System.Environment.NewLine, System.IO.Directory.GetFileSystemEntries(path))}"; }
 
 	/// <summary>
+	/// Get the folders and files tree of a current directory.
+	/// </summary>
+	/// <returns>A list of files and subdirectories in the current directory recursively.</returns>
+	[OllamaTool]
+	public static string CurrentDirectoryTree()
+	{
+		return CommandLineToolExecute($"tree -a -n --gitignore --dirsfirst --noreport");
+	}
+
+	/// <summary>
 	/// Executes a local application/tool with arguments(parameters) and without chaining commands. Just execution of single program.
 	/// Program path and arguments must be provided in a single string. Example:
 	/// "C:\Program Files\MyApp\myapp.exe --option1 value1 --option2 value2"
@@ -174,43 +185,24 @@ public partial class ToolConsole
 	public static string CommandLineToolExecute(string commandLine)
 	{
 		Console.WriteLine("DEBUG: Executing single-line command-line tool: " + commandLine);
+
 		// 1. Configure the process start information
 		ProcessStartInfo startInfo = new ProcessStartInfo
 		{
-			FileName = commandLine,          // Use "powershell.exe" for PowerShell
-			Arguments = string.Empty,               // arguments to pass to the command-line tool
+			FileName = "/bin/bash",
+			Arguments = $"-c \"{commandLine.Replace("\"", "\\\"")}\"", // Escape quotes for bash
 			RedirectStandardOutput = true,       // Allows C# to read the output
 			RedirectStandardError = true,        // Allows C# to read errors
 			UseShellExecute = false,             // Required to redirect streams
 			CreateNoWindow = true                // Runs the process invisibly
 		};
 
-
-		if (commandLine.StartsWith("\""))
-		{
-			string pattern = "^\\s*\"(?<command>.*)\"\\s";
-			//string pattern = @"^\s*""(?<command>.*)""\s";
-			var match = System.Text.RegularExpressions.Regex.Match(pattern, commandLine);
-			startInfo.FileName = match.Groups["command"].Value;
-			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length + 2).Trim(); // +2 to account for the quotes and space
-		}
-		else
-		{
-			startInfo.FileName = commandLine.Split(' ')[0];
-			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
-		}
-
 		try
 		{
 			// 2. Run the process and read the output
 			using (Process process = Process.Start(startInfo))
 			{
-				// Wait for the command to finish
-				process.WaitForExit();
-
 				StringBuilder sb = new StringBuilder();
-				sb.AppendLine($"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"");
-				sb.AppendLine($"Exit code: {process.ExitCode}");
 
 				// Read the output and errors
 				sb.AppendLine("Output:");
@@ -222,6 +214,12 @@ public partial class ToolConsole
 					sb.AppendLine("Errors:");
 					sb.AppendLine(errors);
 				}
+
+				// Wait for the command to finish
+				process.WaitForExit(30000);
+
+				sb.Insert(0, $"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"{Environment.NewLine}");
+				sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 
 				Console.WriteLine(sb.ToString());
 				return sb.ToString();
@@ -255,63 +253,71 @@ public partial class ToolConsole
 		sb0.AppendLine();
 		sb0.AppendLine("# END OF SCRIPT");
 
-		File.WriteAllText("script.sh", sb0.ToString());
-
-		Console.WriteLine("DEBUG: Executing multilinescript: \r\n" + sb0.ToString());
-		// 1. Configure the process start information
-		ProcessStartInfo startInfo = new ProcessStartInfo
+		lock (commandLock)
 		{
-			FileName = "/bin/bash",              // Use "powershell.exe" for PowerShell
-			Arguments = "script.sh",             // arguments to pass to the command-line tool
-			RedirectStandardOutput = true,       // Allows C# to read the output
-			RedirectStandardError = true,        // Allows C# to read errors
-			UseShellExecute = false,             // Required to redirect streams
-			CreateNoWindow = true                // Runs the process invisibly
-		};
 
-		try
-		{
-			// 2. Run the process and read the output
-			using (Process process = Process.Start(startInfo))
+			File.WriteAllText("script.sh", sb0.ToString());
+
+			Console.WriteLine("DEBUG: Executing multiline script: \r\n" + sb0.ToString());
+			// 1. Configure the process start information
+			ProcessStartInfo startInfo = new ProcessStartInfo
 			{
-				// Wait for the command to finish
-				process.WaitForExit();
+				FileName = "/bin/bash",              // Use "powershell.exe" for PowerShell
+				Arguments = "script.sh",             // arguments to pass to the command-line tool
+				RedirectStandardOutput = true,       // Allows C# to read the output
+				RedirectStandardError = true,        // Allows C# to read errors
+				UseShellExecute = false,             // Required to redirect streams
+				CreateNoWindow = true                // Runs the process invisibly
+			};
 
-				StringBuilder sb = new StringBuilder();
-				sb.AppendLine($"Exit code: {process.ExitCode}");
-
-				// Read the output and errors
-				sb.AppendLine("Output:");
-				sb.AppendLine(process.StandardOutput.ReadToEnd());
-
-				string errors = process.StandardError.ReadToEnd();
-				if (!string.IsNullOrEmpty(errors))
+			try
+			{
+				// 2. Run the process and read the output
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+				using (Process process = Process.Start(startInfo))
 				{
-					sb.AppendLine("Errors:");
-					sb.AppendLine(errors);
+					StringBuilder sb = new StringBuilder();
+
+					// Read the output and errors
+					sb.AppendLine("Output:");
+					sb.AppendLine(process.StandardOutput.ReadToEnd());
+
+					string errors = process.StandardError.ReadToEnd();
+					if (!string.IsNullOrEmpty(errors))
+					{
+						sb.AppendLine("Errors:");
+						sb.AppendLine(errors);
+					}
+
+					// Wait for the command to finish
+					process!.WaitForExit(30000);
+
+					sb.Insert(0, $"Executed multiline script: {Environment.NewLine}{sb0}{Environment.NewLine}");
+					sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
+
+					Console.WriteLine(sb.ToString());
+					return sb.ToString();
 				}
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+			}
+			catch (Exception ex)
+			{
+				StringBuilder sb = new StringBuilder();
+				sb.AppendLine($"An error occurred while executing multiline script:");
+				sb.AppendLine(script);
+				sb.AppendLine("--------------------------------");
+				sb.AppendLine($"Error: {ex.Message}");
 
 				Console.WriteLine(sb.ToString());
 				return sb.ToString();
 			}
-		}
-		catch (Exception ex)
-		{
-			StringBuilder sb = new StringBuilder();
-			sb.AppendLine($"An error occurred while executing multiline script:");
-			sb.AppendLine(script);
-			sb.AppendLine("--------------------------------");
-			sb.AppendLine($"Error: {ex.Message}");
-
-			Console.WriteLine(sb.ToString());
-			return sb.ToString();
-		}
-		finally
-		{
-			// Clean up the script file after execution
-			if (File.Exists("script.sh"))
+			finally
 			{
-				File.Delete("script.sh");
+				// Clean up the script file after execution
+				if (File.Exists("script.sh"))
+				{
+					File.Delete("script.sh");
+				}
 			}
 		}
 	}
