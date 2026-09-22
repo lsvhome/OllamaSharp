@@ -171,10 +171,10 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="path">The path of the directory to read.</param>
 	/// <returns>A list of files and subdirectories in the specified directory recursively.</returns>
-	[OllamaTool]
+	//[OllamaTool]
 	public static string DirectoryContentsRecursive(string path)
-	{ 
-		return $"Contents of directory {path}:{System.Environment.NewLine}{CommandLineToolExecute("ls -lR", true)}";
+	{
+		return $"Contents of directory {path}:{System.Environment.NewLine}{CommandLineToolExecute("/usr/bin/ls -lR", true)}";
 	}
 
 	/// <summary>
@@ -189,6 +189,7 @@ public partial class ToolConsole
 	public static string CommandLineToolExecute(string commandLine, bool bareOutputOnSuccess = false)
 	{
 		Console.WriteLine("DEBUG: Executing single-line command-line tool: " + commandLine);
+
 		// 1. Configure the process start information
 		ProcessStartInfo startInfo = new ProcessStartInfo
 		{
@@ -200,23 +201,24 @@ public partial class ToolConsole
 			CreateNoWindow = true                // Runs the process invisibly
 		};
 
-
-		if (commandLine.StartsWith("\""))
-		{
-			string pattern = "^\\s*\"(?<command>.*)\"\\s";
-			//string pattern = @"^\s*""(?<command>.*)""\s";
-			var match = System.Text.RegularExpressions.Regex.Match(pattern, commandLine);
-			startInfo.FileName = match.Groups["command"].Value;
-			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length + 2).Trim(); // +2 to account for the quotes and space
-		}
-		else
-		{
-			startInfo.FileName =  commandLine.Split(' ')[0];
-			startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
-		}
-
+		
 		try
 		{
+
+			if (commandLine.StartsWith("\""))
+			{
+				string pattern = "^\\s*\"(?<command>.*)\"\\s";
+				//string pattern = @"^\s*""(?<command>.*)""\s";
+				var match = System.Text.RegularExpressions.Regex.Match(pattern, commandLine);
+				startInfo.FileName = match.Groups["command"].Value;
+				startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length + 2).Trim(); // +2 to account for the quotes and space
+			}
+			else
+			{
+				startInfo.FileName =  commandLine.Split(' ')[0];
+				startInfo.Arguments = commandLine.Substring(startInfo.FileName.Length).Trim();
+			}
+
 			// 2. Run the process and read the output
 			using (Process process = Process.Start(startInfo))
 			{
