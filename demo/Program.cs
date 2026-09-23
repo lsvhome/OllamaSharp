@@ -20,7 +20,7 @@ do
 
 	if (string.IsNullOrWhiteSpace(url))
 	{
-		 throw new Exception("You must provide ollamaendpoint url with env variable 'OLLAMA_HOST'.");
+		throw new Exception("You must provide ollamaendpoint url with env variable 'OLLAMA_HOST'.");
 	}
 
 	var uri = new Uri(url);
