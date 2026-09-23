@@ -216,8 +216,14 @@ public partial class ToolConsole
 				}
 
 				// Wait for the command to finish
-				process.WaitForExit(30000);
+				bool exited = process.WaitForExit(30000);
 
+				if (!exited)
+				{
+					Console.WriteLine("Killing the process as it did not exit within the timeout period.");
+					process.Kill(); // Kill the process if it didn't exit in time
+				}
+				
 				sb.Insert(0, $"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"{Environment.NewLine}");
 				sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 
@@ -290,7 +296,12 @@ public partial class ToolConsole
 					}
 
 					// Wait for the command to finish
-					process!.WaitForExit(30000);
+					bool exited = process!.WaitForExit(30000);
+					if (!exited)
+					{
+						Console.WriteLine("Killing the process as it did not exit within the timeout period.");
+						process.Kill(); // Kill the process if it didn't exit in time
+					}
 
 					sb.Insert(0, $"Executed multiline script: {Environment.NewLine}{sb0}{Environment.NewLine}");
 					sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
