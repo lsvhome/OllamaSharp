@@ -63,7 +63,7 @@ Follow repo-specific rules in file AGENTS.md when it is present.
 
 				var chat = new Chat(Ollama, systemPrompt) { Think = Think };
 				//chat.OnThink += (sender, thoughts) => AnsiConsole.MarkupInterpolated($"[{AiThinkTextColor}]{thoughts}[/]");
-				chat.OnThink += (sender, thoughts) => Console.WriteLine(thoughts);
+				chat.OnThink += (sender, thoughts) => { Console.WriteLine(DateTime.Now); Console.WriteLine(thoughts); Console.WriteLine(DateTime.Now); };
 				chat.OnToolResult += (sender, result) => RenderToolResult(result);
 
 				string message;
@@ -189,6 +189,7 @@ Follow repo-specific rules in file AGENTS.md when it is present.
 
 	private static void RenderToolResult(ToolResult toolResult)
 	{
+		Console.WriteLine(DateTime.Now);
 		try
 		{
 			Console.WriteLine($"{RenderToolSignature(toolResult)}");
@@ -199,6 +200,8 @@ Follow repo-specific rules in file AGENTS.md when it is present.
 		{
 			Console.WriteLine($"An error occurred while rendering tool result: {ex.Message}");
 		}
+
+		Console.WriteLine(DateTime.Now);
 	}
 
 	private static string RenderToolSignature(ToolResult toolResult)
