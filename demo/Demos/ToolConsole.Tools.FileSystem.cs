@@ -18,6 +18,11 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string FileWrite(string path, string contents)
 	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			throw new ArgumentException("path not provided, but is required parameter", nameof(path));
+		}
+
 		var parentDirectory = Path.GetDirectoryName(path);
 		if (!string.IsNullOrWhiteSpace(parentDirectory))
 		{
@@ -33,7 +38,16 @@ public partial class ToolConsole
 	/// </summary>
 	/// <param name="path">The path of the file to delete.</param>
 	[OllamaTool]
-	public static string FileDelete(string path) { System.IO.File.Delete(path); return $"File deleted: {path}"; }
+	public static string FileDelete(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			throw new ArgumentException("path not provided, but is required parameter", nameof(path));
+		}
+
+		System.IO.File.Delete(path);
+		return $"File deleted: {path}";
+	}
 
 	/// <summary>
 	/// Read file contents from a given path.
@@ -60,6 +74,16 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string FileMove(string oldPath, string newPath)
 	{
+		if (string.IsNullOrWhiteSpace(oldPath))
+		{
+			throw new ArgumentException("oldPath not provided, but is required parameter", nameof(oldPath));
+		}
+
+		if (string.IsNullOrWhiteSpace(newPath))
+		{
+			throw new ArgumentException("newPath not provided, but is required parameter", nameof(newPath));
+		}
+
 		var parentDirectory = Path.GetDirectoryName(newPath);
 		if (!string.IsNullOrWhiteSpace(parentDirectory))
 		{
@@ -83,7 +107,16 @@ public partial class ToolConsole
 	/// <param name="path">The path of the directory to set as the current working directory.</param>
 	/// <returns>The current working directory.</returns>
 	[OllamaTool]
-	public static string SetCurrentDirectory(string path) { System.IO.Directory.SetCurrentDirectory(path); return $"Current directory now is: \"{System.IO.Directory.GetCurrentDirectory()}\""; }
+	public static string SetCurrentDirectory(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			throw new ArgumentException("path not provided, but is required parameter", nameof(path));
+		}
+
+		System.IO.Directory.SetCurrentDirectory(path);
+		return $"Current directory now is: \"{System.IO.Directory.GetCurrentDirectory()}\"";
+	}
 
 	/// <summary>
 	/// Check if a directory exists at a given path.
@@ -134,7 +167,16 @@ public partial class ToolConsole
 	/// <param name="path">The path of the directory to delete.</param>
 	/// <returns>A boolean indicating whether the directory was deleted.</returns>
 	[OllamaTool]
-	public static string DirectoryDelete(string path) { System.IO.Directory.Delete(path); return $"Deleted directory: {path}"; }
+	public static string DirectoryDelete(string path)
+	{
+		if (string.IsNullOrWhiteSpace(path))
+		{
+			throw new ArgumentException("path not provided, but is required parameter", nameof(path));
+		}
+
+		System.IO.Directory.Delete(path);
+		return $"Deleted directory: {path}";
+	}
 
 	/// <summary>
 	/// Move (rename) a directory from one path to another.
@@ -145,6 +187,16 @@ public partial class ToolConsole
 	[OllamaTool]
 	public static string DirectoryMove(string oldPath, string newPath)
 	{
+		if (string.IsNullOrWhiteSpace(oldPath))
+		{
+			throw new ArgumentException("oldPath not provided, but is required parameter", nameof(oldPath));
+		}
+
+		if (string.IsNullOrWhiteSpace(newPath))
+		{
+			throw new ArgumentException("newPath not provided, but is required parameter", nameof(newPath));
+		}
+
 		var parentDirectory = Path.GetDirectoryName(newPath);
 		if (!string.IsNullOrWhiteSpace(parentDirectory))
 		{
@@ -223,9 +275,9 @@ public partial class ToolConsole
 					Console.WriteLine("Killing the process as it did not exit within the timeout period.");
 					process.Kill(); // Kill the process if it didn't exit in time
 				}
-				
+
+				sb.Insert(0, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 				sb.Insert(0, $"Executed command-line tool: \"{startInfo.FileName}\" with parameters \"{startInfo.Arguments}\"{Environment.NewLine}");
-				sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 
 				Console.WriteLine(sb.ToString());
 				return sb.ToString();
@@ -303,8 +355,8 @@ public partial class ToolConsole
 						process.Kill(); // Kill the process if it didn't exit in time
 					}
 
+					sb.Insert(0, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 					sb.Insert(0, $"Executed multiline script: {Environment.NewLine}{sb0}{Environment.NewLine}");
-					sb.Insert(1, $"Exit code: {process.ExitCode}{Environment.NewLine}");
 
 					Console.WriteLine(sb.ToString());
 					return sb.ToString();

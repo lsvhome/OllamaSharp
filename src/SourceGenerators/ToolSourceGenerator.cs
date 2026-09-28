@@ -309,18 +309,22 @@ $@"{(isAsync ? ASYNC_SIGNATURE : SYNC_SIGNATURE)}
 			}}
 			catch (Exception ex)
 			{{
-				return new
+				var ret = new
 				{{
 					Tool = this,
 					ToolCall = new
 					{{
 						Function = this.Function,
-						Arguments = args
+						Arguments = string.Join(Environment.NewLine+Environment.NewLine, args)
 					}},
 					Result = ""False"",
 					Error = ex.Message,
 					Exception = ex
 				}};
+
+				System.IO.File.WriteAllText($""Exception_{{DateTime.Now.ToString(""dd_HH_mm_ss_ffff"")}}.txt"", ret.ToString());
+
+				return ret;
 
 			}}
         }}";

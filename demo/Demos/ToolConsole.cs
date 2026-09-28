@@ -45,8 +45,8 @@ When source changes are requested, they should be split into small, meaningful p
 Each source change should be committed with a relevant message.
 Build & Quality: The solution must be buildable, and all warnings must be fixed. If a warning cannot be fixed, it must be documented in the 'Issues' paragraph of technical-design.md with an explanation of why it cannot be fixed.
 Testing: All tests must be passing (green).
-Documentation: The technical-design.md file must be updated to reflect the new state of the system.
-Formatting: dotnet format must be executed before committing changes.
+Documentation: The technical-design.md file (if it is present) must be updated to reflect the new state of the system.
+Formatting: for dotnet projects and solutions dotnet format must be executed before committing changes.
 Commit Message: The commit message must clearly reflect the changes that have been implemented. After excecuting commit command git repo should be verified commit is available, commit hash is present. 
 Follow repo-specific rules in file AGENTS.md when it is present.
 				";
