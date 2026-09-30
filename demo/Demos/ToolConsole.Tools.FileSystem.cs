@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Text;
 using OllamaSharp;
@@ -13,10 +14,10 @@ public partial class ToolConsole
 	/// <summary>
 	/// Write contents to a file at a given path.
 	/// </summary>
-	/// <param name="path">The path of the file to write to.</param>
+	/// <param name="path">[Required] The path of the file to write to.</param>
 	/// <param name="contents">The contents to write to the file.</param>
 	[OllamaTool]
-	public static string FileWrite(string path, string contents)
+	public static string FileWrite([Required]string path, string contents)
 	{
 		if (string.IsNullOrWhiteSpace(path))
 		{

@@ -300,29 +300,31 @@ public class ToolSourceGenerator : IIncrementalGenerator
 		return
 $@"{(isAsync ? ASYNC_SIGNATURE : SYNC_SIGNATURE)}
         {{
+			lock(commandLockObj)
 			try
 			{{
             	if (args == null) args = new Dictionary<string, object?>();
 {paramBlock}
-
+//// throw new Exception(""TEST AAAAAA"");
             	{callPart}
 			}}
 			catch (Exception ex)
 			{{
 				var ret = new
 				{{
-					Tool = this,
-					ToolCall = new
-					{{
-						Function = this.Function,
-						Arguments = string.Join(Environment.NewLine+Environment.NewLine, args)
-					}},
+					Function = this.Function.Name,
+					//// Tool = this,
+					//// ToolCall = new
+					//// {{
+					//// 	Function = this.Function,
+					//// 	//// Arguments = string.Join(Environment.NewLine+Environment.NewLine, args)
+					//// }},
 					Result = ""False"",
 					Error = ex.Message,
-					Exception = ex
+					//// Exception = ex
 				}};
 
-				System.IO.File.WriteAllText($""Exception_{{DateTime.Now.ToString(""dd_HH_mm_ss_ffff"")}}.txt"", ret.ToString());
+				System.IO.File.WriteAllText($""Exception_{{DateTime.Now.ToString(""yyyy_MM_dd_HH_mm_ss_ffff"")}}.txt"", ret.ToString());
 
 				return ret;
 
@@ -358,6 +360,8 @@ using System.Threading.Tasks;
     /// </summary>
     public class {toolClassName} : OllamaSharp.Models.Chat.Tool, {(isAsync ? "OllamaSharp.Tools.IAsyncInvokableTool" : "OllamaSharp.Tools.IInvokableTool")}
     {{
+		private static object commandLockObj = new object();
+
         /// <summary>
         /// Initializes a new instance with metadata about the original method.
         /// </summary>
