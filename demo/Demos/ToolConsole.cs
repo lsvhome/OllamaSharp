@@ -71,6 +71,7 @@ Follow repo-specific rules in file AGENTS.md when it is present.
 				do
 				{
 					AnsiConsole.WriteLine();
+					Console.Beep();
 					message = ReadInput();
 
 					if (message.Equals(EXIT_COMMAND, StringComparison.OrdinalIgnoreCase))
