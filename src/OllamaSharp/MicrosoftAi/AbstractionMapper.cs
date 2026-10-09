@@ -198,7 +198,15 @@ internal static class AbstractionMapper
 	/// <returns>A <see cref="JsonNode"/> representing the tool in Ollama's expected format.</returns>
 	private static JsonNode? ToOllamaSharpTool(AIFunctionDeclaration function)
 	{
-		JsonElement transformedSchema = _schemaTransformCache.GetOrCreateTransformedSchema(function);
+AIJsonSchemaTransformOptions o = new AIJsonSchemaTransformOptions(); 
+var t = new AIJsonSchemaTransformCache (o);
+
+
+		// t.ConvertBooleanSchemas = true;
+		// t.DisallowAdditionalProperties = true;
+
+		var c = t;
+		JsonElement transformedSchema = c.GetOrCreateTransformedSchema(function);
 		return new JsonObject
 		{
 			["type"] = Application.Function,

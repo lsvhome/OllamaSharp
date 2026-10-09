@@ -319,8 +319,8 @@ $@"{(isAsync ? ASYNC_SIGNATURE : SYNC_SIGNATURE)}
 					//// 	Function = this.Function,
 					//// 	//// Arguments = string.Join(Environment.NewLine+Environment.NewLine, args)
 					//// }},
-					Result = ""False"",
-					Error = ex.Message,
+					Result = ""Error"",
+					ErrorText = ex.Message,
 					//// Exception = ex
 				}};
 

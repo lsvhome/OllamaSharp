@@ -19,12 +19,15 @@ public class ExtensionsAiToolConsole(IOllamaApiClient ollama) : OllamaConsole(ol
 		AnsiConsole.Write(new Rule("Extensions.AI").LeftJustified());
 		AnsiConsole.WriteLine();
 
-		Ollama.SelectedModel = await SelectModel("Select a model you want to chat with:");
+		Ollama.SelectedModel = "gemma4-dev:latest"; //await SelectModel("Select a model you want to chat with:");
 
 		if (!string.IsNullOrEmpty(Ollama.SelectedModel))
 		{
 			var keepChatting = true;
 			var systemPrompt = ReadInput($"Define a system prompt [{HintTextColor}](optional)[/]");
+
+			if (string.IsNullOrWhiteSpace(systemPrompt))
+				systemPrompt = ToolConsole.SystemPrompt;
 
 			var services = new ServiceCollection();
 			services.AddChatClient((IChatClient)Ollama).UseFunctionInvocation();

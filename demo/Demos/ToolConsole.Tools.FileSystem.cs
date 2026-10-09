@@ -21,7 +21,7 @@ public partial class ToolConsole
 	{
 		if (string.IsNullOrWhiteSpace(path))
 		{
-			throw new ArgumentException("path not provided, but is required parameter", nameof(path));
+			throw new ArgumentException("path parameter was not provided, but is required", nameof(path));
 		}
 
 		var parentDirectory = Path.GetDirectoryName(path);
