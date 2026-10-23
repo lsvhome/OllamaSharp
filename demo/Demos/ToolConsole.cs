@@ -23,7 +23,8 @@ Documentation: The technical-design.md or DESIGN.md file (if it is present) must
 Formatting: for dotnet projects and solutions dotnet format must be executed before committing changes.
 Commit Message: The commit message must clearly reflect the changes that have been implemented. After excecuting commit command git repo should be verified commit is available, commit hash is present. 
 Follow repo-specific rules in file AGENTS.md when it is present.
-When user request completed type 'Task completed'.
+When user request completed, working folder should not contain uncommitted files.
+When user request completed type 'Task completed in {commit hashes}'.
 				";
 	public static List<string> CommandHistory = new List<string>();
 

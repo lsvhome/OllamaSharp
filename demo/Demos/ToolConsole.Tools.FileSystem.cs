@@ -226,6 +226,59 @@ public partial class ToolConsole
 		return CommandLineToolExecute($"tree -a -n --gitignore --dirsfirst --noreport");
 	}
 
+    /// <summary>
+    /// Replaces all occurrences of a case-sensitive text in a file.
+    /// </summary>
+    /// <param name="path">The path of the file to modify.</param>
+    /// <param name="oldText">The text to be replaced.</param>
+    /// <param name="newText">The text to replace with.</param>
+    /// <returns>A message indicating the result of the operation.</returns>
+    [OllamaTool]
+    public static string FileReplaceText(string path, string oldText, string newText)
+    {
+        if (!System.IO.File.Exists(path))
+        {
+            return $"Error: File not found at {path}";
+        }
+
+        string contents = System.IO.File.ReadAllText(path);
+        if (!contents.Contains(oldText))
+        {
+            return $"Warning: Text '{oldText}' not found in file {path}";
+        }
+
+        string updatedContents = contents.Replace(oldText, newText);
+        System.IO.File.WriteAllText(path, updatedContents);
+        return $"Successfully replaced '{oldText}' with '{newText}' in {path}";
+    }
+
+    /// <summary>
+    /// Replaces all occurrences of a regex pattern in a file.
+    /// </summary>
+    /// <param name="path">The path of the file to modify.</param>
+    /// <param name="regexPattern">The regex pattern to match.</param>
+    /// <param name="replacement">The text to replace the match with.</param>
+    /// <returns>A message indicating the result of the operation.</returns>
+    [OllamaTool]
+    public static string FileReplaceRegex(string path, string regexPattern, string replacement)
+    {
+        if (!System.IO.File.Exists(path))
+        {
+            return $"Error: File not found at {path}";
+        }
+
+        string contents = System.IO.File.ReadAllText(path);
+        string updatedContents = System.Text.RegularExpressions.Regex.Replace(contents, regexPattern, replacement);
+
+        if (contents == updatedContents)
+        {
+            return $"Warning: No matches found for pattern '{regexPattern}' in file {path}";
+        }
+
+        System.IO.File.WriteAllText(path, updatedContents);
+        return $"Successfully replaced matches of pattern '{regexPattern}' with '{replacement}' in {path}";
+    }
+
 	/// <summary>
 	/// Executes a local application/tool with arguments(parameters) and without chaining commands. Just execution of single program.
 	/// Program path and arguments must be provided in a single string. Example:
