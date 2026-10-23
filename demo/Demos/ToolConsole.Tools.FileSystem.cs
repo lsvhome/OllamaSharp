@@ -12,12 +12,12 @@ public partial class ToolConsole
 {
 	public static object commandLock = new object();
 	/// <summary>
-	/// Write contents to a file at a given path.
+	/// Write text to a file at a given path.
 	/// </summary>
 	/// <param name="path">[Required] The path of the file to write to.</param>
 	/// <param name="contents">The contents to write to the file.</param>
 	[OllamaTool]
-	public static string FileWrite([Required]string path, string contents)
+	public static string FileWriteText([Required]string path, string contents)
 	{
 		if (string.IsNullOrWhiteSpace(path))
 		{
@@ -37,7 +37,7 @@ public partial class ToolConsole
 	/// <summary>
 	/// Delete a file at a given path.
 	/// </summary>
-	/// <param name="path">The path of the file to delete.</param>
+	/// <param name="path">[Required] The path of the file to delete.</param>
 	[OllamaTool]
 	public static string FileDelete(string path)
 	{
@@ -51,12 +51,12 @@ public partial class ToolConsole
 	}
 
 	/// <summary>
-	/// Read file contents from a given path.
+	/// Read file text contents from a given path.
 	/// </summary>
-	/// <param name="path">The path of the file to read.</param>
+	/// <param name="path">[Required] The path of the file to read.</param>
 	/// <returns>The contents of the file.</returns>
 	[OllamaTool]
-	public static string FileRead(string path) => System.IO.File.ReadAllText(path);
+	public static string FileReadText(string path) => System.IO.File.ReadAllText(path);
 
 	/// <summary>
 	/// Check if a file exists at a given path.
