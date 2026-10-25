@@ -42,17 +42,17 @@ public class Chat
 	/// If Think is set to null, think tokens will be written to the default model output.
 	/// If Think is false, think tokens will not be emitted.
 	/// </summary>
-	public event EventHandler<string>? OnThink;
+	public event EventHandler<ChatEventArgs>? OnThink;
 
 	/// <summary>
 	/// Gets fired when the AI model wants to invoke a tool.
 	/// </summary>
-	public event EventHandler<Message.ToolCall>? OnToolCall;
+	public event EventHandler<ToolCallEventArgs>? OnToolCall;
 
 	/// <summary>
 	/// Gets fired after a tool was invoked and the result is available.
 	/// </summary>
-	public event EventHandler<ToolResult>? OnToolResult;
+	public event EventHandler<ToolResultEventArgs>? OnToolResult;
 
 	/// <summary>
 	/// Gets or sets the messages of the chat history
@@ -154,6 +154,9 @@ public class Chat
 	/// Sends a message to the currently selected model and streams its response
 	/// </summary>
 	/// <param name="message">The message to send</param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
+	/// </param>
 	/// <param name="cancellationToken">The token to cancel the operation with</param>
 	/// <returns>An <see cref="IAsyncEnumerable{String}"/> that streams the response.</returns>
 	/// <example>
@@ -164,14 +167,19 @@ public class Chat
 	///		 Console.WriteLine(answerToken);
 	/// </code>
 	/// </example>
-	public IAsyncEnumerable<string> SendAsync(string message, CancellationToken cancellationToken = default)
-		=> SendAsync(message, tools: null, imagesAsBase64: null, format: null, cancellationToken: cancellationToken);
+	public IAsyncEnumerable<string> SendAsync(string message,
+		object? state = null,
+		CancellationToken cancellationToken = default)
+		=> SendAsync(message, tools: null, imagesAsBase64: null, format: null, state: state, cancellationToken: cancellationToken);
 
 	/// <summary>
 	/// Sends a message to the currently selected model and streams its response
 	/// </summary>
 	/// <param name="message">The message to send</param>
 	/// <param name="imagesAsBytes">Images in byte representation to send to the model</param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
+	/// </param>
 	/// <param name="cancellationToken">The token to cancel the operation with</param>
 	/// <returns>An <see cref="IAsyncEnumerable{String}"/> that streams the response.</returns>
 	/// <example>
@@ -191,14 +199,19 @@ public class Chat
 	///  //         lying in a blanket that has been rumpled up.
 	/// </code>
 	/// </example>
-	public IAsyncEnumerable<string> SendAsync(string message, IEnumerable<IEnumerable<byte>>? imagesAsBytes, CancellationToken cancellationToken = default)
-		=> SendAsync(message, imagesAsBase64: imagesAsBytes?.ToBase64(), cancellationToken: cancellationToken);
+	public IAsyncEnumerable<string> SendAsync(string message, IEnumerable<IEnumerable<byte>>? imagesAsBytes,
+		object? state = null,
+		CancellationToken cancellationToken = default)
+		=> SendAsync(message, imagesAsBase64: imagesAsBytes?.ToBase64(), state: state, cancellationToken: cancellationToken);
 
 	/// <summary>
 	/// Sends a message to the currently selected model and streams its response
 	/// </summary>
 	/// <param name="message">The message to send</param>
 	/// <param name="imagesAsBase64">Base64 encoded images to send to the model</param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
+	/// </param>
 	/// <param name="cancellationToken">The token to cancel the operation with</param>
 	/// <returns>An <see cref="IAsyncEnumerable{String}"/> that streams the response.</returns>
 	/// <example>
@@ -219,8 +232,10 @@ public class Chat
 	/// // of the image is a wooden floor.
 	/// </code>
 	/// </example>
-	public IAsyncEnumerable<string> SendAsync(string message, IEnumerable<string>? imagesAsBase64, CancellationToken cancellationToken = default)
-		=> SendAsync(message, tools: null, imagesAsBase64: imagesAsBase64, cancellationToken: cancellationToken);
+	public IAsyncEnumerable<string> SendAsync(string message, IEnumerable<string>? imagesAsBase64,
+		object? state = null,
+		CancellationToken cancellationToken = default)
+		=> SendAsync(message, tools: null, imagesAsBase64: imagesAsBase64, state: state, cancellationToken: cancellationToken);
 
 	/// <summary>
 	/// Sends a message to the currently selected model and streams its response.
@@ -238,6 +253,9 @@ public class Chat
 	/// </param>
 	/// <param name="format">
 	/// Specifies the response format. Can be set to <c>"json"</c> or an object created with <c>JsonSerializerOptions.Default.GetJsonSchemaAsNode</c>.
+	/// </param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
 	/// </param>
 	/// <param name="cancellationToken">
 	/// A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.
@@ -265,8 +283,10 @@ public class Chat
 	/// </example>
 	public IAsyncEnumerable<string> SendAsync(string message, IEnumerable<object>? tools,
 		IEnumerable<string>? imagesAsBase64 = null, object? format = null,
+		object? state = null,
 		CancellationToken cancellationToken = default)
 		=> SendAsAsync(ChatRole.User, message, tools: tools, imagesAsBase64: imagesAsBase64, format: format,
+			state: state,
 			cancellationToken: cancellationToken);
 
 	/// <summary>
@@ -277,6 +297,9 @@ public class Chat
 	/// </param>
 	/// <param name="message">
 	/// The message to be sent as a string.
+	/// </param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
 	/// </param>
 	/// <param name="cancellationToken">
 	/// An optional <see cref="CancellationToken"/> to observe while waiting for the response.
@@ -298,8 +321,9 @@ public class Chat
 	/// </code>
 	/// </example>
 	public IAsyncEnumerable<string> SendAsAsync(ChatRole role, string message,
+		object? state = null,
 		CancellationToken cancellationToken = default)
-		=> SendAsAsync(role, message, tools: null, imagesAsBase64: null, cancellationToken: cancellationToken);
+		=> SendAsAsync(role, message, tools: null, imagesAsBase64: null, state: state, cancellationToken: cancellationToken);
 
 	/// <summary>
 	/// Sends a message in a given role to the currently selected model and streams its response asynchronously.
@@ -312,6 +336,9 @@ public class Chat
 	/// </param>
 	/// <param name="imagesAsBytes">
 	/// Optional images represented as byte arrays to include in the request. This parameter can be <c>null</c>.
+	/// </param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
 	/// </param>
 	/// <param name="cancellationToken">
 	/// A cancellation token to observe while waiting for the response.
@@ -335,8 +362,10 @@ public class Chat
 	/// </code>
 	/// </example>
 	public IAsyncEnumerable<string> SendAsAsync(ChatRole role, string message,
-		IEnumerable<IEnumerable<byte>>? imagesAsBytes, CancellationToken cancellationToken = default)
-		=> SendAsAsync(role, message, imagesAsBase64: imagesAsBytes?.ToBase64(), cancellationToken: cancellationToken);
+		IEnumerable<IEnumerable<byte>>? imagesAsBytes,
+		object? state = null,
+		CancellationToken cancellationToken = default)
+		=> SendAsAsync(role, message, imagesAsBase64: imagesAsBytes?.ToBase64(), state: state, cancellationToken: cancellationToken);
 
 	/// <summary>
 	/// Sends a message with a specified role to the current model and streams the response as an asynchronous sequence of strings.
@@ -349,6 +378,9 @@ public class Chat
 	/// </param>
 	/// <param name="imagesAsBase64">
 	/// Optional collection of images, encoded in Base64 format, to include with the message.
+	/// </param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
 	/// </param>
 	/// <param name="cancellationToken">
 	/// A token that can be used to cancel the operation.
@@ -371,8 +403,10 @@ public class Chat
 	/// </code>
 	/// </example>
 	public IAsyncEnumerable<string> SendAsAsync(ChatRole role, string message, IEnumerable<string>? imagesAsBase64,
+		object? state = null,
 		CancellationToken cancellationToken = default)
 		=> SendAsAsync(role, message, tools: null, imagesAsBase64: imagesAsBase64,
+			state: state,
 			cancellationToken: cancellationToken);
 
 	/// <summary>
@@ -393,6 +427,9 @@ public class Chat
 	/// <param name="format">
 	/// Defines the response format. Acceptable values include <c>"json"</c> or a schema object created with <c>JsonSerializerOptions.Default.GetJsonSchemaAsNode</c>.
 	/// </param>
+	/// <param name="state">
+	/// Defines the state object which would be returned with events.
+	/// </param>
 	/// <param name="cancellationToken">
 	/// A token to cancel the ongoing operation if required.
 	/// </param>
@@ -403,7 +440,7 @@ public class Chat
 	/// Thrown if the <paramref name="format"/> argument is of type <see cref="CancellationToken"/> by mistake, or if any unsupported types are passed.
 	/// </exception>
 	/// <example>
-	/// Using the <see cref="SendAsAsync(ChatRole, string, IEnumerable{object}, IEnumerable{string}, object, CancellationToken)"/> method to send a message and stream the model's response:
+	/// Using the <see cref="SendAsAsync(ChatRole, string, IEnumerable{object}, IEnumerable{string}, object, object, CancellationToken)"/> method to send a message and stream the model's response:
 	/// <code>
 	/// var chat = new Chat(client);
 	/// var role = new ChatRole("assistant");
@@ -417,6 +454,7 @@ public class Chat
 	/// </example>
 	public async IAsyncEnumerable<string> SendAsAsync(ChatRole role, string message, IEnumerable<object>? tools,
 		IEnumerable<string>? imagesAsBase64 = null, object? format = null,
+		object? state = null,
 		[EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		if (format is CancellationToken)
@@ -447,7 +485,7 @@ public class Chat
 			// yield the message content or call the delegate to handle thinking
 			var isThinking = (bool?)Think == true && !string.IsNullOrEmpty(answerMessageChunk.Thinking);
 			if (isThinking)
-				OnThink?.Invoke(this, answerMessageChunk.Thinking!);
+				OnThink?.Invoke(this, new ChatEventArgs { Text = answerMessageChunk.Thinking!, State = state });
 			else
 				yield return answerMessageChunk.Content ?? string.Empty;
 		}
@@ -464,10 +502,10 @@ public class Chat
 				foreach (var toolCall in answerMessage.ToolCalls)
 				{
 					// call tools if available and requested by the AI model and yield the results
-					OnToolCall?.Invoke(this, toolCall);
+					OnToolCall?.Invoke(this, new ToolCallEventArgs { ToolCall = toolCall, State = state });
 					var toolResult = await ToolInvoker.InvokeAsync(toolCall, tools ?? [], cancellationToken).ConfigureAwait(false);
 					toolResultMessages.Add(new Message(ChatRole.Tool, $"Tool: {StringifyToolCall(toolCall)}:\nResult: {toolResult.Result}")); // TODO Arguments
-					OnToolResult?.Invoke(this, toolResult);
+					OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = toolResult, State = state });
 				}
 
 				if (toolResultMessages.Any())
@@ -487,4 +525,21 @@ public class Chat
 		return $"{toolCall.Function?.Name ?? "(unnamed tool)"}({string.Join(", ", toolCall.Function?.Arguments?.Select(kvp => $"{kvp.Key}: {kvp.Value}") ?? [])})";
 	}
 
+	public class ChatEventArgs : EventArgs
+	{
+		public string Text { get; set; }
+		public object? State { get; set; }
+	}
+
+	public class ToolResultEventArgs : EventArgs
+	{
+		public ToolResult ToolResult { get; set; }
+		public object? State { get; set; }
+	}
+
+	public class ToolCallEventArgs : EventArgs
+	{
+		public Message.ToolCall ToolCall { get; set; }
+		public object? State { get; set; }
+	}
 }
