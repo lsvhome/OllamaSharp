@@ -44,6 +44,8 @@ public class Chat
 	/// </summary>
 	public event EventHandler<ChatEventArgs>? OnThink;
 
+	public event EventHandler<ChatEventArgs>? OnThought;
+
 	/// <summary>
 	/// Gets fired when the AI model wants to invoke a tool.
 	/// </summary>
@@ -475,6 +477,7 @@ public class Chat
 		};
 
 		var messageBuilder = new MessageBuilder();
+		var thoughtBuilder = new MessageBuilder();
 		await foreach (var answer in Client.ChatAsync(request, cancellationToken).ConfigureAwait(false))
 		{
 			if (answer?.Message is not { } answerMessageChunk)
@@ -485,9 +488,20 @@ public class Chat
 			// yield the message content or call the delegate to handle thinking
 			var isThinking = (bool?)Think == true && !string.IsNullOrEmpty(answerMessageChunk.Thinking);
 			if (isThinking)
+			{
 				OnThink?.Invoke(this, new ChatEventArgs { Text = answerMessageChunk.Thinking!, State = state });
+				thoughtBuilder.Append(answer);
+			}
 			else
+			{
 				yield return answerMessageChunk.Content ?? string.Empty;
+			}
+		}
+
+
+		if (thoughtBuilder.HasValue)
+		{
+			OnThought?.Invoke(this, new ChatEventArgs { Text = thoughtBuilder.ToMessage().Content, State = state });
 		}
 
 		if (messageBuilder.HasValue)

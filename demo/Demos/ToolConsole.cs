@@ -4,6 +4,7 @@ using OllamaSharp;
 using OllamaSharp.Models.Exceptions;
 using OllamaSharp.Tools;
 using Spectre.Console;
+using static OllamaSharp.Chat;
 
 namespace OllamaApiConsole.Demos;
 
@@ -66,7 +67,7 @@ When user request completed type 'Task completed in {commit hashes}'.
 
 				var chat = new Chat(Ollama, systemPrompt) { Think = Think };
 				//chat.OnThink += (sender, thoughts) => AnsiConsole.MarkupInterpolated($"[{AiThinkTextColor}]{thoughts}[/]");
-				chat.OnThink += (sender, thoughts) => { Console.WriteLine(DateTime.Now); Console.WriteLine(thoughts); Console.WriteLine(DateTime.Now); };
+				chat.OnThink += (sender, thoughts) => { Console.WriteLine(DateTime.Now); Console.WriteLine(thoughts.Text); Console.WriteLine(DateTime.Now); };
 				chat.OnToolResult += (sender, result) => RenderToolResult(result);
 
 				string message;
@@ -191,13 +192,13 @@ When user request completed type 'Task completed in {commit hashes}'.
 		}
 	}
 
-	private static void RenderToolResult(ToolResult toolResult)
+	private static void RenderToolResult(ToolResultEventArgs toolResultEventArgs)
 	{
 		Console.WriteLine(DateTime.Now);
 		try
 		{
-			Console.WriteLine($"{RenderToolSignature(toolResult)}");
-			Console.WriteLine($"      = {toolResult.Result?.ToString() ?? ""}");
+			Console.WriteLine($"{RenderToolSignature(toolResultEventArgs.ToolResult)}");
+			Console.WriteLine($"      = {toolResultEventArgs.ToolResult.Result?.ToString() ?? ""}");
 			AnsiConsole.WriteLine("");
 		}
 		catch (Exception ex)
