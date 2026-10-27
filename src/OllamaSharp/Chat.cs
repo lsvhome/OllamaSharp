@@ -56,6 +56,8 @@ public class Chat
 	/// </summary>
 	public event EventHandler<ToolResultEventArgs>? OnToolResult;
 
+	public event EventHandler<MessageEventArgs>? OnMessage;
+
 	/// <summary>
 	/// Gets or sets the messages of the chat history
 	/// </summary>
@@ -149,7 +151,9 @@ public class Chat
 		if (string.IsNullOrWhiteSpace(systemPrompt))
 			return;
 
-		Messages.Add(new Message(ChatRole.System, systemPrompt));
+		var systemMessage = new Message(ChatRole.System, systemPrompt);
+		Messages.Add(systemMessage);
+		OnMessage?.Invoke(this, new MessageEventArgs { Message = systemMessage, State = state });
 	}
 
 	/// <summary>
@@ -463,7 +467,9 @@ public class Chat
 			throw new NotSupportedException(
 				$"Argument \"{nameof(format)}\" cannot be of type {nameof(CancellationToken)}. Make sure you use the correct method overload of {nameof(Chat)}{nameof(SendAsync)}() or {nameof(Chat)}{nameof(SendAsAsync)}().");
 
-		Messages.Add(new Message(role, message, imagesAsBase64?.ToArray()));
+		var inputMessage = new Message(role, message, imagesAsBase64?.ToArray());
+		Messages.Add(inputMessage);
+		OnMessage?.Invoke(this, new MessageEventArgs { Message = inputMessage, State = state });
 
 		var request = new ChatRequest
 		{
@@ -508,6 +514,7 @@ public class Chat
 		{
 			var answerMessage = messageBuilder.ToMessage();
 			Messages.Add(answerMessage);
+			OnMessage?.Invoke(this, new MessageEventArgs { Message = answerMessage, State = state });
 
 			// support recursive tool calls when a model decides to call tools several times in a row
 			if (ToolInvoker is not null && answerMessage.ToolCalls?.Any() == true && AllowRecursiveToolCalls)
@@ -518,7 +525,10 @@ public class Chat
 					// call tools if available and requested by the AI model and yield the results
 					OnToolCall?.Invoke(this, new ToolCallEventArgs { ToolCall = toolCall, State = state });
 					var toolResult = await ToolInvoker.InvokeAsync(toolCall, tools ?? [], cancellationToken).ConfigureAwait(false);
-					toolResultMessages.Add(new Message(ChatRole.Tool, $"Tool: {StringifyToolCall(toolCall)}:\nResult: {toolResult.Result}")); // TODO Arguments
+					var toolMessage = new Message(ChatRole.Tool, $"Tool: {StringifyToolCall(toolCall)}:\nResult: {toolResult.Result}");
+					toolResultMessages.Add(toolMessage); // TODO Arguments
+
+					OnMessage?.Invoke(this, new MessageEventArgs { Message = toolMessage, State = state });
 					OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = toolResult, State = state });
 				}
 
@@ -526,7 +536,10 @@ public class Chat
 				{
 					// in case of multiple tool calls, add these to the message history except the last one.
 					// the last one will be used as message to send back to the AI model which causes the chat to go on.
-					Messages.AddRange(toolResultMessages.Take(toolResultMessages.Count - 1));
+					var messagesToAdd = toolResultMessages.Take(toolResultMessages.Count - 1);
+					Messages.AddRange(messagesToAdd);
+					messagesToAdd.ForEachItem(m => { OnMessage?.Invoke(this, new MessageEventArgs { Message = m, State = state }); });
+
 					await foreach (var answer in SendAsAsync(ChatRole.Tool, toolResultMessages.Last()!.Content ?? "", tools, cancellationToken: cancellationToken).ConfigureAwait(false))
 						yield return answer;
 				}
@@ -556,4 +569,11 @@ public class Chat
 		public Message.ToolCall ToolCall { get; set; }
 		public object? State { get; set; }
 	}
+
+	public class MessageEventArgs : EventArgs
+	{
+		public Message Message { get; set; }
+		public object? State { get; set; }
+	}
+
 }
