@@ -53,6 +53,12 @@ public class Message
 	}
 
 	/// <summary>
+	/// Gets or sets the unique identifier of the message.
+	/// </summary>
+	[JsonPropertyName("id")]
+	public Guid Id { get; set; } = new Guid();
+
+	/// <summary>
 	/// Gets or sets the role of the message, either system, user, or assistant.
 	/// </summary>
 	[JsonPropertyName("role")]
