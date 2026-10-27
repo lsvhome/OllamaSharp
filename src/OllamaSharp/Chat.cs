@@ -153,7 +153,7 @@ public class Chat
 
 		var systemMessage = new Message(ChatRole.System, systemPrompt);
 		Messages.Add(systemMessage);
-		OnMessage?.Invoke(this, new MessageEventArgs { Message = systemMessage, State = state });
+		OnMessage?.Invoke(this, new MessageEventArgs { Message = systemMessage, State = null });
 	}
 
 	/// <summary>
