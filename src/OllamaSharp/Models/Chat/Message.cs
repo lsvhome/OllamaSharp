@@ -56,13 +56,13 @@ public class Message
 	/// Gets or sets the unique identifier of the message.
 	/// </summary>
 	[JsonPropertyName("id")]
-	public Guid Id { get; init; } = new Guid();
+	public Guid Id { get; init; } = Guid.NewGuid();
 
 	/// <summary>
 	/// Gets the datetime of the message creation.
 	/// </summary>
 	[JsonPropertyName("created")]
-	public DateTime CreatedTimestamp { get; init; } = DateTime.Now;
+	public DateTime Created { get; init; } = DateTime.Now;
 
 	/// <summary>
 	/// Gets or sets the role of the message, either system, user, or assistant.
