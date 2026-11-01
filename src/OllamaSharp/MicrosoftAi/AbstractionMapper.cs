@@ -14,10 +14,9 @@ namespace OllamaSharp.MicrosoftAi;
 /// </summary>
 internal static class AbstractionMapper
 {
-	private static readonly AIJsonSchemaTransformCache _schemaTransformCache = new(new()
+	private static readonly AIJsonSchemaTransformCache _schemaTransformCache = new(new AIJsonSchemaTransformOptions
 	{
-		ConvertBooleanSchemas = true,
-		DisallowAdditionalProperties = true,
+		TransformSchemaNode = (context, node) => node
 	});
 
 	/// <summary>
