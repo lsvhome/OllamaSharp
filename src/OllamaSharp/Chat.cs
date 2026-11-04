@@ -36,6 +36,8 @@ namespace OllamaSharp;
 /// </summary>
 public class Chat
 {
+	public event EventHandler<MessageEventArgs>? OnBeforeSend;
+
 	/// <summary>
 	/// Event that gets fired for each token that the AI model is thinking. This will just work for models that support thinking according to their Ollama
 	/// manifest and if Think is set to true.
@@ -467,7 +469,10 @@ public class Chat
 			throw new NotSupportedException(
 				$"Argument \"{nameof(format)}\" cannot be of type {nameof(CancellationToken)}. Make sure you use the correct method overload of {nameof(Chat)}{nameof(SendAsync)}() or {nameof(Chat)}{nameof(SendAsAsync)}().");
 
+
 		var inputMessage = new Message(role, message, imagesAsBase64?.ToArray());
+		OnBeforeSend?.Invoke(this, new MessageEventArgs { Message = inputMessage, State = state });
+
 		Messages.Add(inputMessage);
 		OnMessage?.Invoke(this, new MessageEventArgs { Message = inputMessage, State = state });
 
