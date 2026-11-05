@@ -545,7 +545,7 @@ public class Chat
 					Messages.AddRange(messagesToAdd);
 					messagesToAdd.ForEachItem(m => { OnMessage?.Invoke(this, new MessageEventArgs { Message = m, State = state }); });
 
-					await foreach (var answer in SendAsAsync(ChatRole.Tool, toolResultMessages.Last()!.Content ?? "", tools, cancellationToken: cancellationToken).ConfigureAwait(false))
+					await foreach (var answer in SendAsAsync(ChatRole.Tool, toolResultMessages.Last()!.Content ?? "", tools: tools, imagesAsBase64: imagesAsBase64, format: format, state: state, cancellationToken: cancellationToken).ConfigureAwait(false))
 						yield return answer;
 				}
 			}
