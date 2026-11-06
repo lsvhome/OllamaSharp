@@ -489,6 +489,8 @@ public class Chat : IChat
 
 		var messageBuilder = new MessageBuilder();
 		var thoughtBuilder = new MessageBuilder();
+
+		Client.SelectedModel = this.Model;
 		await foreach (var answer in Client.ChatAsync(request, cancellationToken).ConfigureAwait(false))
 		{
 			if (answer?.Message is not { } answerMessageChunk)
