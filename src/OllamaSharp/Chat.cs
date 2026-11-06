@@ -34,7 +34,7 @@ namespace OllamaSharp;
 /// </code>
 /// </example>
 /// </summary>
-public class Chat
+public class Chat : IChat
 {
 	public event EventHandler<MessageEventArgs>? OnBeforeSend;
 
