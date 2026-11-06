@@ -17,6 +17,8 @@ public interface IChatFactory
 	IChat CreateChat(string model, ThinkValue thinkLevel);
 
 	string GetDefaultModelName();
+
+	Task<IEnumerable<string>> ListLocalModelsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -47,6 +49,11 @@ public class OllamaChatFactory : IChatFactory
 		string defaultModelName = _configuration["OLLAMA_MODEL"] ?? throw new ApplicationException("Environment variable OLLAMA_MODEL not configured");
 		return defaultModelName;
 	}
+
+	public async Task<IEnumerable<string>> ListLocalModelsAsync(CancellationToken cancellationToken = default)
+	{
+		return (await _client.ListLocalModelsAsync(cancellationToken)).Select(m => m.Name);
+	}
 }
 
 /// <summary>
@@ -73,4 +80,11 @@ public class LlamaCppChatFactory : IChatFactory
 		string defaultModelName = _configuration["OLLAMA_MODEL"] ?? throw new ApplicationException("Environment variable OLLAMA_MODEL not configured");
 		return defaultModelName;
 	}
+
+	public Task<IEnumerable<string>> ListLocalModelsAsync(CancellationToken cancellationToken = default)
+	{
+		var models = new string[1] { this.GetDefaultModelName() };
+		return Task.FromResult(models.AsEnumerable());
+	}
+
 }
