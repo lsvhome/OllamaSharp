@@ -535,7 +535,7 @@ public class Chat : IChat
 					var toolMessage = new Message(ChatRole.Tool, $"Tool: {StringifyToolCall(toolCall)}:\nResult: {toolResult.Result}");
 					toolResultMessages.Add(toolMessage); // TODO Arguments
 
-					OnMessage?.Invoke(this, new MessageEventArgs { Message = toolMessage, State = state });
+					// duplicate OnMessage call -  OnMessage?.Invoke(this, new MessageEventArgs { Message = toolMessage, State = state });
 					OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = toolResult, State = state });
 				}
 
