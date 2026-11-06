@@ -1,4 +1,8 @@
+using OllamaSharp.Models.Chat;
+
 namespace OllamaSharp;
+
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// Factory for creating <see cref="IChat"/> instances.
@@ -10,7 +14,9 @@ public interface IChatFactory
 	/// </summary>
 	/// <param name="model">The model to use for the chat.</param>
 	/// <returns>A new <see cref="IChat"/> instance.</returns>
-	IChat CreateChat(string model);
+	IChat CreateChat(string model, ThinkValue thinkLevel);
+
+	string GetDefaultModelName();
 }
 
 /// <summary>
@@ -19,18 +25,27 @@ public interface IChatFactory
 public class OllamaChatFactory : IChatFactory
 {
 	private readonly IOllamaApiClient _client;
+	private readonly IConfiguration _configuration;
 
-	public OllamaChatFactory(IOllamaApiClient client)
+	public OllamaChatFactory(IOllamaApiClient client, IConfiguration configuration)
 	{
 		_client = client;
+		_configuration = configuration;
 	}
 
-	public IChat CreateChat(string model)
+	public IChat CreateChat(string model, ThinkValue thinkLevel)
 	{
 		return new Chat(_client)
 		{
 			Model = model,
+			Think = ThinkValue.Medium
 		};
+	}
+
+	public string GetDefaultModelName()
+	{
+		string defaultModelName = _configuration["OLLAMA_MODEL"] ?? throw new ApplicationException("Environment variable OLLAMA_MODEL not configured");
+		return defaultModelName;
 	}
 }
 
@@ -40,14 +55,22 @@ public class OllamaChatFactory : IChatFactory
 public class LlamaCppChatFactory : IChatFactory
 {
 	private readonly Microsoft.Extensions.AI.IChatClient _client;
+	private readonly IConfiguration _configuration;
 
-	public LlamaCppChatFactory(Microsoft.Extensions.AI.IChatClient client)
+	public LlamaCppChatFactory(Microsoft.Extensions.AI.IChatClient client, IConfiguration configuration)
 	{
 		_client = client;
+		_configuration = configuration;
 	}
 
-	public IChat CreateChat(string model)
+	public IChat CreateChat(string model, ThinkValue thinkLevel)
 	{
 		return new ChatExtensionsAI(_client, model);
+	}
+
+	public string GetDefaultModelName()
+	{
+		string defaultModelName = _configuration["OLLAMA_MODEL"] ?? throw new ApplicationException("Environment variable OLLAMA_MODEL not configured");
+		return defaultModelName;
 	}
 }

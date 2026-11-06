@@ -47,6 +47,7 @@
 		<!-- Keep Microsoft.Extensions.AI aligned with Microsoft.Extensions.AI.Abstractions to avoid
 		     binary-incompatible approval content types. See https://github.com/awaescher/OllamaSharp/issues/378. -->
 		<PackageReference Include="Microsoft.Extensions.AI" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
