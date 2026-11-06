@@ -4,7 +4,6 @@ using OllamaSharp;
 using OllamaSharp.Models.Exceptions;
 using OllamaSharp.Tools;
 using Spectre.Console;
-using static OllamaSharp.Chat;
 
 namespace OllamaApiConsole.Demos;
 

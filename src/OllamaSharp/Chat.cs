@@ -556,29 +556,29 @@ public class Chat : IChat
 	{
 		return $"{toolCall.Function?.Name ?? "(unnamed tool)"}({string.Join(", ", toolCall.Function?.Arguments?.Select(kvp => $"{kvp.Key}: {kvp.Value}") ?? [])})";
 	}
-
-	public class ChatEventArgs : EventArgs
-	{
-		public string Text { get; set; }
-		public object? State { get; set; }
-	}
-
-	public class ToolResultEventArgs : EventArgs
-	{
-		public ToolResult ToolResult { get; set; }
-		public object? State { get; set; }
-	}
-
-	public class ToolCallEventArgs : EventArgs
-	{
-		public Message.ToolCall ToolCall { get; set; }
-		public object? State { get; set; }
-	}
-
-	public class MessageEventArgs : EventArgs
-	{
-		public Message Message { get; set; }
-		public object? State { get; set; }
-	}
-
 }
+
+public class ChatEventArgs : EventArgs
+{
+	public string Text { get; set; }
+	public object? State { get; set; }
+}
+
+public class ToolResultEventArgs : EventArgs
+{
+	public ToolResult ToolResult { get; set; }
+	public object? State { get; set; }
+}
+
+public class ToolCallEventArgs : EventArgs
+{
+	public Message.ToolCall ToolCall { get; set; }
+	public object? State { get; set; }
+}
+
+public class MessageEventArgs : EventArgs
+{
+	public Message Message { get; set; }
+	public object? State { get; set; }
+}
+

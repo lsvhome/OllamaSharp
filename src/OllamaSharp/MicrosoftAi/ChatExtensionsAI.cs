@@ -12,6 +12,23 @@ using ChatRole = OllamaSharp.Models.Chat.ChatRole;
 /// </summary>
 public class ChatExtensionsAI : IChat
 {
+	public event EventHandler<MessageEventArgs>? OnBeforeSend;
+	public event EventHandler<ChatEventArgs>? OnThink;
+
+	public event EventHandler<ChatEventArgs>? OnThought;
+
+	/// <summary>
+	/// Gets fired when the AI model wants to invoke a tool.
+	/// </summary>
+	public event EventHandler<ToolCallEventArgs>? OnToolCall;
+
+	/// <summary>
+	/// Gets fired after a tool was invoked and the result is available.
+	/// </summary>
+	public event EventHandler<ToolResultEventArgs>? OnToolResult;
+
+	public event EventHandler<MessageEventArgs>? OnMessage;
+
 	private readonly IChatClient _client;
 
 	public List<Message> Messages { get; set; } = [];

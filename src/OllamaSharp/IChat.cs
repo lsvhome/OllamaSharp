@@ -7,6 +7,24 @@ using OllamaSharp.Models.Chat;
 /// </summary>
 public interface IChat
 {
+	public event EventHandler<MessageEventArgs>? OnBeforeSend;
+
+	public event EventHandler<ChatEventArgs>? OnThink;
+
+	public event EventHandler<ChatEventArgs>? OnThought;
+
+	/// <summary>
+	/// Gets fired when the AI model wants to invoke a tool.
+	/// </summary>
+	public event EventHandler<ToolCallEventArgs>? OnToolCall;
+
+	/// <summary>
+	/// Gets fired after a tool was invoked and the result is available.
+	/// </summary>
+	public event EventHandler<ToolResultEventArgs>? OnToolResult;
+
+	public event EventHandler<MessageEventArgs>? OnMessage;
+
 	/// <summary>
 	/// Gets or sets the messages of the chat history.
 	/// </summary>
