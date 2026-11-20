@@ -524,17 +524,13 @@ public class Chat
 			// support recursive tool calls when a model decides to call tools several times in a row
 			if (ToolInvoker is not null && answerMessage.ToolCalls?.Any() == true && AllowRecursiveToolCalls)
 			{
-				var toolResultMessages = new List<Message>();
+				var toolResultMessages = new List<ToolResult>();
 				foreach (var toolCall in answerMessage.ToolCalls)
 				{
 					// call tools if available and requested by the AI model and yield the results
 					OnToolCall?.Invoke(this, new ToolCallEventArgs { ToolCall = toolCall, State = state });
 					var toolResult = await ToolInvoker.InvokeAsync(toolCall, tools ?? [], cancellationToken).ConfigureAwait(false);
-					var toolMessage = new Message(ChatRole.Tool, $"Tool: {StringifyToolCall(toolCall)}:\nResult: {toolResult.Result}");
-					toolResultMessages.Add(toolMessage); // TODO Arguments
-
-					OnMessage?.Invoke(this, new MessageEventArgs { Message = toolMessage, State = state });
-					OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = toolResult, State = state });
+					toolResultMessages.Add(toolResult); // TODO Arguments
 				}
 
 				if (toolResultMessages.Any())
@@ -542,17 +538,27 @@ public class Chat
 					// in case of multiple tool calls, add these to the message history except the last one.
 					// the last one will be used as message to send back to the AI model which causes the chat to go on.
 					var messagesToAdd = toolResultMessages.Take(toolResultMessages.Count - 1);
-					Messages.AddRange(messagesToAdd);
-					messagesToAdd.ForEachItem(m => { OnMessage?.Invoke(this, new MessageEventArgs { Message = m, State = state }); });
 
-					await foreach (var answer in SendAsAsync(ChatRole.Tool, toolResultMessages.Last()!.Content ?? "", tools: tools, imagesAsBase64: imagesAsBase64, format: format, state: state, cancellationToken: cancellationToken).ConfigureAwait(false))
+					messagesToAdd.ForEachItem(toolResult =>
+					{
+						Message message = toolResult;
+						Messages.Add(message);
+						OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = toolResult, State = state });
+						OnMessage?.Invoke(this, new MessageEventArgs { Message = message, State = state });
+					});
+
+					var lastToolResult = toolResultMessages.Last()!;
+
+					OnToolResult?.Invoke(this, new ToolResultEventArgs { ToolResult = lastToolResult, State = state });
+
+					await foreach (var answer in SendAsAsync(ChatRole.Tool, ((Message)(lastToolResult)).Content ?? "", tools: tools, imagesAsBase64: imagesAsBase64, format: format, state: state, cancellationToken: cancellationToken).ConfigureAwait(false))
 						yield return answer;
 				}
 			}
 		}
 	}
 
-	private static string StringifyToolCall(Message.ToolCall toolCall)
+	internal static string StringifyToolCall(Message.ToolCall toolCall)
 	{
 		return $"{toolCall.Function?.Name ?? "(unnamed tool)"}({string.Join(", ", toolCall.Function?.Arguments?.Select(kvp => $"{kvp.Key}: {kvp.Value}") ?? [])})";
 	}
