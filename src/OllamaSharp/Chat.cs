@@ -36,7 +36,11 @@ namespace OllamaSharp;
 /// </summary>
 public class Chat
 {
+	/// <summary>
+	/// Event that gets fired before a message is sent to the AI model.
+	/// </summary>
 	public event EventHandler<MessageEventArgs>? OnBeforeSend;
+
 
 	/// <summary>
 	/// Event that gets fired for each token that the AI model is thinking. This will just work for models that support thinking according to their Ollama
@@ -45,8 +49,11 @@ public class Chat
 	/// If Think is false, think tokens will not be emitted.
 	/// </summary>
 	public event EventHandler<ChatEventArgs>? OnThink;
-
+	/// <summary>
+	/// Event that gets fired when the AI model is thinking.
+	/// </summary>
 	public event EventHandler<ChatEventArgs>? OnThought;
+
 
 	/// <summary>
 	/// Gets fired when the AI model wants to invoke a tool.
@@ -57,8 +64,11 @@ public class Chat
 	/// Gets fired after a tool was invoked and the result is available.
 	/// </summary>
 	public event EventHandler<ToolResultEventArgs>? OnToolResult;
-
+	/// <summary>
+	/// Event that gets fired when a message is processed.
+	/// </summary>
 	public event EventHandler<MessageEventArgs>? OnMessage;
+
 
 	/// <summary>
 	/// Gets or sets the messages of the chat history
@@ -272,7 +282,7 @@ public class Chat
 	/// An asynchronous enumerable stream of string responses from the model.
 	/// </returns>
 	/// <example>
-	/// Example usage of <see cref="SendAsync(string, IEnumerable{object}?, IEnumerable{string}?, object?, CancellationToken)"/>:
+	/// Example usage of <see cref="SendAsync(string, IEnumerable{object}, IEnumerable{string}, object, object, CancellationToken)"/>:
 	/// <code>
 	/// var client = new OllamaApiClient("http://localhost:11434", "qwen3.5:35b-a3b");
 	/// var chat = new Chat(client);
@@ -316,7 +326,7 @@ public class Chat
 	/// An <see cref="IAsyncEnumerable{T}"/> of strings representing the streamed response from the server.
 	/// </returns>
 	/// <example>
-	/// Example usage of the <see cref="SendAsAsync(ChatRole, string, CancellationToken)"/> method:
+	/// Example usage of the <see cref="SendAsAsync(ChatRole, string, object, CancellationToken)"/> method:
 	/// <code>
 	/// var client = new OllamaApiClient("http://localhost:11434", "qwen3.5:35b-a3b");
 	/// var chat = new Chat(client);
@@ -562,29 +572,62 @@ public class Chat
 	{
 		return $"{toolCall.Function?.Name ?? "(unnamed tool)"}({string.Join(", ", toolCall.Function?.Arguments?.Select(kvp => $"{kvp.Key}: {kvp.Value}") ?? [])})";
 	}
-
+	/// <summary>
+	/// Event arguments for chat events.
+	/// </summary>
 	public class ChatEventArgs : EventArgs
 	{
-		public string Text { get; set; }
+		/// <summary>
+		/// The text content of the thinking process.
+		/// </summary>
+		public string? Text { get; set; }
+		/// <summary>
+		/// The state object associated with the event.
+		/// </summary>
 		public object? State { get; set; }
 	}
-
+	/// <summary>
+	/// Event arguments for tool result events.
+	/// </summary>
 	public class ToolResultEventArgs : EventArgs
 	{
-		public ToolResult ToolResult { get; set; }
+		/// <summary>
+		/// The result of the tool invocation.
+		/// </summary>
+		public ToolResult? ToolResult { get; set; }
+		/// <summary>
+		/// The state object associated with the event.
+		/// </summary>
 		public object? State { get; set; }
 	}
-
+	/// <summary>
+	/// Event arguments for tool call events.
+	/// </summary>
 	public class ToolCallEventArgs : EventArgs
 	{
-		public Message.ToolCall ToolCall { get; set; }
+		/// <summary>
+		/// The tool call requested by the AI model.
+		/// </summary>
+		public Message.ToolCall? ToolCall { get; set; }
+		/// <summary>
+		/// The state object associated with the event.
+		/// </summary>
+		public object? State { get; set; }
+	}
+	/// <summary>
+	/// Event arguments for message events.
+	/// </summary>
+	public class MessageEventArgs : EventArgs
+	{
+		/// <summary>
+		/// The message associated with the event.
+		/// </summary>
+		public Message? Message { get; set; }
+		/// <summary>
+		/// The state object associated with the event.
+		/// </summary>
 		public object? State { get; set; }
 	}
 
-	public class MessageEventArgs : EventArgs
-	{
-		public Message Message { get; set; }
-		public object? State { get; set; }
-	}
 
 }
