@@ -10,9 +10,9 @@ namespace OllamaSharp.Tools;
 /// <param name="Result">The result returned by the tool execution, or null if no result was produced.</param>
 public record ToolResult(Tool Tool, Message.ToolCall ToolCall, object? Result)
 {
-    public static implicit operator Message(ToolResult toolResult)
-    {
-        var content = $"Tool: {Chat.StringifyToolCall(toolResult.ToolCall)}:\nResult: {toolResult.Result}";
-        return new Message(ChatRole.Tool, content);
-    }
+	public static implicit operator Message(ToolResult toolResult)
+	{
+		var content = $"Tool: {Chat.StringifyToolCall(toolResult.ToolCall)}:\nResult: {toolResult.Result}";
+		return new Message(ChatRole.Tool, content);
+	}
 }
